@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 
 import pymupdf
+from ..i18n import T
 
 
 def parse_ranges(text: str, page_count: int) -> list[int]:
@@ -33,10 +34,10 @@ def parse_ranges(text: str, page_count: int) -> list[int]:
         elif part.isdigit():
             nums = [int(part)]
         else:
-            raise ValueError(f"Intervallo non valido: '{part}'")
+            raise ValueError(T("Intervallo non valido: '{}'").format(part))
         for n in nums:
             if n < 1 or n > page_count:
-                raise ValueError(f"La pagina {n} non esiste (il documento ha {page_count} pagine)")
+                raise ValueError(T('La pagina {} non esiste (il documento ha {} pagine)').format(n, page_count))
             if n - 1 not in seen:
                 seen.add(n - 1)
                 out.append(n - 1)

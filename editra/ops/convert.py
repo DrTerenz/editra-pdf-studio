@@ -11,6 +11,7 @@ from pathlib import Path
 import pymupdf
 
 from .common import TEXT_FLAGS
+from ..i18n import T
 
 IMAGE_EXT = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp", ".jxr", ".pnm")
 OFFICE_EXT = {".doc": "word", ".docx": "word", ".rtf": "word", ".odt": "word", ".txt": None,
@@ -32,7 +33,7 @@ def to_images(doc: pymupdf.Document, pages: list[int], out_dir: str, base: str, 
             pix.save(path)
         else:
             from PIL import Image
-            img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            img = Image.frombytes(T('RGB'), (pix.width, pix.height), pix.samples)
             if fmt in ("jpg", "jpeg"):
                 img.save(path, "JPEG", quality=90, dpi=(dpi, dpi))
             elif fmt in ("tif", "tiff"):
@@ -58,7 +59,7 @@ def to_html(doc: pymupdf.Document, path: str, pages=None) -> None:
              "<style>body{background:#eee}div.page{background:white;margin:20px auto;box-shadow:0 2px 8px #0003;"
              "position:relative}</style></head><body>"]
     for p in (pages if pages is not None else range(doc.page_count)):
-        parts.append("<div class='page'>" + doc[p].get_text("html") + "</div>")
+        parts.append(T("<div class='page'>") + doc[p].get_text("html") + "</div>")
     parts.append("</body></html>")
     with open(path, "w", encoding="utf-8") as f:
         f.write("".join(parts))
@@ -143,7 +144,7 @@ def to_excel(doc: pymupdf.Document, out_path: str, pages=None) -> int:
             n += 1
     if n == 0:
         # nessuna tabella: testo riga per riga
-        ws = wb.create_sheet("Testo")
+        ws = wb.create_sheet(T('Testo'))
         r = 1
         for p in (pages if pages is not None else range(doc.page_count)):
             for line in doc[p].get_text(flags=TEXT_FLAGS, sort=True).splitlines():
@@ -186,7 +187,7 @@ def images_to_pdf(paths: list[str], page_size: tuple[float, float] | None = None
 
 
 def text_to_pdf(text: str, fontsize: float = 11, page_size=(595, 842), title: str = "") -> pymupdf.Document:
-    html = "<pre style='font-family:monospace;white-space:pre-wrap;font-size:%gpx'>%s</pre>" % (
+    html = T("<pre style='font-family:monospace;white-space:pre-wrap;font-size:%gpx'>%s</pre>") % (
         fontsize, _html.escape(text))
     return html_to_pdf(html, page_size)
 
@@ -234,15 +235,9 @@ def office_to_pdf(path: str, out_pdf: str, timeout: int = 300) -> None:
     dst = os.path.abspath(out_pdf)
     if kind and office_available(kind):
         ps = {
-            "word": "$a=New-Object -ComObject Word.Application;$a.Visible=$false;"
-                    "$d=$a.Documents.Open('{src}',$false,$true);$d.ExportAsFixedFormat('{dst}',17);"
-                    "$d.Close($false);$a.Quit()",
-            "excel": "$a=New-Object -ComObject Excel.Application;$a.Visible=$false;$a.DisplayAlerts=$false;"
-                     "$d=$a.Workbooks.Open('{src}',0,$true);$d.ExportAsFixedFormat(0,'{dst}');"
-                     "$d.Close($false);$a.Quit()",
-            "powerpoint": "$a=New-Object -ComObject PowerPoint.Application;"
-                          "$d=$a.Presentations.Open('{src}',$true,$false,$false);$d.SaveAs('{dst}',32);"
-                          "$d.Close();$a.Quit()",
+            "word": T("$a=New-Object -ComObject Word.Application;$a.Visible=$false;$d=$a.Documents.Open('{src}',$false,$true);$d.ExportAsFixedFormat('{dst}',17);$d.Close($false);$a.Quit()"),
+            "excel": T("$a=New-Object -ComObject Excel.Application;$a.Visible=$false;$a.DisplayAlerts=$false;$d=$a.Workbooks.Open('{src}',0,$true);$d.ExportAsFixedFormat(0,'{dst}');$d.Close($false);$a.Quit()"),
+            "powerpoint": T("$a=New-Object -ComObject PowerPoint.Application;$d=$a.Presentations.Open('{src}',$true,$false,$false);$d.SaveAs('{dst}',32);$d.Close();$a.Quit()"),
         }[kind].format(src=src.replace("'", "''"), dst=dst.replace("'", "''"))
         r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
                            capture_output=True, text=True, timeout=timeout,
@@ -251,7 +246,7 @@ def office_to_pdf(path: str, out_pdf: str, timeout: int = 300) -> None:
             return
         err = (r.stderr or r.stdout).strip()
     else:
-        err = "Microsoft Office non trovato"
+        err = T('Microsoft Office non trovato')
     lo = libreoffice_path()
     if lo:
         outdir = tempfile.mkdtemp()
@@ -264,7 +259,7 @@ def office_to_pdf(path: str, out_pdf: str, timeout: int = 300) -> None:
             shutil.rmtree(outdir, ignore_errors=True)
             return
         shutil.rmtree(outdir, ignore_errors=True)
-    raise RuntimeError("Conversione non riuscita. Serve Microsoft Office o LibreOffice installato.\n" + err)
+    raise RuntimeError(T('Conversione non riuscita. Serve Microsoft Office o LibreOffice installato.\n') + err)
 
 
 def any_to_pdf(path: str) -> pymupdf.Document:

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QColorDialog, QComb
 
 from . import icons, settings, theme
 from .ops.common import human_size
+from .i18n import T
 
 
 # ============================================================ modulo generico
@@ -30,20 +31,20 @@ class ColorButton(QToolButton):
     def setColor(self, c: str | None) -> None:
         self.color = c
         self.setIcon(icons.color_swatch(c))
-        self.setText(c.upper() if c else "Nessuno")
+        self.setText(c.upper() if c else T('Nessuno'))
 
     def _pick(self) -> None:
         from PySide6.QtWidgets import QMenu
         if self.allow_none:
             m = QMenu(self)
-            m.addAction("Scegli colore…", self._dialog)
-            m.addAction("Nessun colore", lambda: (self.setColor(None), self.changed.emit(None)))
+            m.addAction(T('Scegli colore…'), self._dialog)
+            m.addAction(T('Nessun colore'), lambda: (self.setColor(None), self.changed.emit(None)))
             m.exec(self.mapToGlobal(self.rect().bottomLeft()))
         else:
             self._dialog()
 
     def _dialog(self) -> None:
-        c = QColorDialog.getColor(QColor(self.color or "#000000"), self, "Scegli colore")
+        c = QColorDialog.getColor(QColor(self.color or "#000000"), self, T('Scegli colore'))
         if c.isValid():
             self.setColor(c.name())
             self.changed.emit(c.name())
@@ -55,7 +56,7 @@ class PathEdit(QWidget):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         self.edit = QLineEdit(value)
-        b = QPushButton("Sfoglia…")
+        b = QPushButton(T('Sfoglia…'))
         b.clicked.connect(self._browse)
         lay.addWidget(self.edit)
         lay.addWidget(b)
@@ -63,11 +64,11 @@ class PathEdit(QWidget):
 
     def _browse(self) -> None:
         if self.mode == "dir":
-            p = QFileDialog.getExistingDirectory(self, "Scegli cartella", self.edit.text())
+            p = QFileDialog.getExistingDirectory(self, T('Scegli cartella'), self.edit.text())
         elif self.mode == "save":
-            p, _ = QFileDialog.getSaveFileName(self, "Salva come", self.edit.text(), self.filt)
+            p, _ = QFileDialog.getSaveFileName(self, T('Salva come'), self.edit.text(), self.filt)
         else:
-            p, _ = QFileDialog.getOpenFileName(self, "Scegli file", self.edit.text(), self.filt)
+            p, _ = QFileDialog.getOpenFileName(self, T('Scegli file'), self.edit.text(), self.filt)
         if p:
             self.edit.setText(p)
 
@@ -116,7 +117,7 @@ class FormDialog(QDialog):
                 form.addRow(label, w)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.button(QDialogButtonBox.Ok).setText(ok_text)
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -219,16 +220,15 @@ def ask(parent, title: str, fields: list, intro: str = "", ok_text: str = "OK", 
 class MergeDialog(QDialog):
     def __init__(self, parent, initial: list[str] | None = None):
         super().__init__(parent)
-        self.setWindowTitle("Combina file in un unico PDF")
+        self.setWindowTitle(T('Combina file in un unico PDF'))
         self.resize(640, 460)
         lay = QVBoxLayout(self)
-        intro = QLabel("Aggiungi PDF, immagini o altri documenti. Trascinali per cambiare l'ordine; "
-                       "nella colonna Pagine puoi indicare quali pagine prendere (es. 1-3, 5).")
+        intro = QLabel(T("Aggiungi PDF, immagini o altri documenti. Trascinali per cambiare l'ordine; nella colonna Pagine puoi indicare quali pagine prendere (es. 1-3, 5)."))
         intro.setWordWrap(True)
         intro.setObjectName("muted")
         lay.addWidget(intro)
         self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["File", "Pagine", "Dimensione"])
+        self.table.setHorizontalHeaderLabels([T('File'), T('Pagine'), T('Dimensione')])
         self.table.horizontalHeader().setStretchLastSection(False)
         self.table.setColumnWidth(0, 360)
         self.table.setColumnWidth(1, 120)
@@ -237,19 +237,19 @@ class MergeDialog(QDialog):
         self.table.verticalHeader().setVisible(False)
         lay.addWidget(self.table)
         row = QHBoxLayout()
-        for text, fn in (("Aggiungi file…", self.add), ("Rimuovi", self.remove), ("Su", lambda: self.move(-1)),
-                         ("Giù", lambda: self.move(1)), ("Ordina per nome", self.sort)):
+        for text, fn in ((T('Aggiungi file…'), self.add), (T('Rimuovi'), self.remove), ("Su", lambda: self.move(-1)),
+                         (T('Giù'), lambda: self.move(1)), (T('Ordina per nome'), self.sort)):
             b = QPushButton(text)
             b.clicked.connect(fn)
             row.addWidget(b)
         row.addStretch()
         lay.addLayout(row)
-        self.bookmarks = QCheckBox("Crea un segnalibro per ogni file")
+        self.bookmarks = QCheckBox(T('Crea un segnalibro per ogni file'))
         self.bookmarks.setChecked(True)
         lay.addWidget(self.bookmarks)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Combina")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Ok).setText(T('Combina'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self._ok)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -264,13 +264,13 @@ class MergeDialog(QDialog):
         it.setToolTip(p)
         it.setFlags(it.flags() & ~Qt.ItemIsEditable)
         self.table.setItem(r, 0, it)
-        self.table.setItem(r, 1, QTableWidgetItem("tutte"))
+        self.table.setItem(r, 1, QTableWidgetItem(T("tutte")))
         sz = QTableWidgetItem(human_size(os.path.getsize(p)) if os.path.exists(p) else "")
         sz.setFlags(sz.flags() & ~Qt.ItemIsEditable)
         self.table.setItem(r, 2, sz)
 
     def add(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(self, "Aggiungi file", "", FILE_FILTER_ALL)
+        paths, _ = QFileDialog.getOpenFileNames(self, T('Aggiungi file'), "", FILE_FILTER_ALL)
         for p in paths:
             self._append(p)
 
@@ -303,17 +303,15 @@ class MergeDialog(QDialog):
 
     def _ok(self) -> None:
         if self.table.rowCount() < 1:
-            QMessageBox.information(self, "Combina file", "Aggiungi almeno un file.")
+            QMessageBox.information(self, T('Combina file'), T('Aggiungi almeno un file.'))
             return
         self.accept()
 
     def items(self) -> list[tuple[str, str]]:
-        return [(p, "" if rng.strip().lower() in ("tutte", "") else rng) for p, rng in self._rows()]
+        return [(p, "" if rng.strip().lower() in ("tutte", "all", T("tutte").lower(), "") else rng) for p, rng in self._rows()]
 
 
-FILE_FILTER_ALL = ("Documenti supportati (*.pdf *.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp *.xps *.oxps "
-                   "*.epub *.cbz *.svg *.txt *.html *.htm *.doc *.docx *.rtf *.odt *.xls *.xlsx *.ods *.csv *.ppt "
-                   "*.pptx *.odp);;PDF (*.pdf);;Tutti i file (*)")
+FILE_FILTER_ALL = (T('Documenti supportati (*.pdf *.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp *.xps *.oxps *.epub *.cbz *.svg *.txt *.html *.htm *.doc *.docx *.rtf *.odt *.xls *.xlsx *.ods *.csv *.ppt *.pptx *.odp);;PDF (*.pdf);;Tutti i file (*)'))
 
 
 # ============================================================ firma a mano
@@ -390,7 +388,7 @@ class SignatureDialog(QDialog):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setWindowTitle("Crea la tua firma")
+        self.setWindowTitle(T('Crea la tua firma'))
         lay = QVBoxLayout(self)
         self.tabs = QTabWidget()
         lay.addWidget(self.tabs)
@@ -400,22 +398,22 @@ class SignatureDialog(QDialog):
         self.pad = SignaturePad()
         l1.addWidget(self.pad)
         r1 = QHBoxLayout()
-        clear = QPushButton("Cancella")
+        clear = QPushButton(T('Cancella'))
         clear.clicked.connect(self.pad.clear)
         self.color = ColorButton("#1a237e")
         self.color.changed.connect(lambda c: (setattr(self.pad, "pen_color", QColor(c)), self.pad.update()))
-        r1.addWidget(QLabel("Colore:"))
+        r1.addWidget(QLabel(T('Colore:')))
         r1.addWidget(self.color)
         r1.addStretch()
         r1.addWidget(clear)
         l1.addLayout(r1)
-        self.tabs.addTab(w1, "Disegna")
+        self.tabs.addTab(w1, T('Disegna'))
         # testo
         w2 = QWidget()
         l2 = QFormLayout(w2)
         self.name = QLineEdit(settings.get("author", os.environ.get("USERNAME", "")))
         self.font = QFontComboBox()
-        for fam in ("Segoe Script", "Ink Free", "Lucida Handwriting", "Brush Script MT", "Gabriola"):
+        for fam in (T('Segoe Script'), T('Ink Free'), T('Lucida Handwriting'), T('Brush Script MT'), T('Gabriola')):
             if QFont(fam).exactMatch() or fam in QFontComboBox().currentFont().families():
                 self.font.setCurrentFont(QFont(fam))
                 break
@@ -427,24 +425,24 @@ class SignatureDialog(QDialog):
         self.preview.setStyleSheet("background:white; border:1px solid #ddd; color:#1a237e;")
         self.name.textChanged.connect(self._prev)
         self.font.currentFontChanged.connect(self._prev)
-        l2.addRow("Nome:", self.name)
-        l2.addRow("Carattere:", self.font)
+        l2.addRow(T('Nome:'), self.name)
+        l2.addRow(T('Carattere:'), self.font)
         l2.addRow(self.preview)
-        self.tabs.addTab(w2, "Scrivi")
+        self.tabs.addTab(w2, T('Scrivi'))
         # immagine
         w3 = QWidget()
         l3 = QVBoxLayout(w3)
-        self.img_path = PathEdit("", "open", "Immagini (*.png *.jpg *.jpeg *.bmp)")
-        l3.addWidget(QLabel("Immagine della firma (meglio PNG con sfondo trasparente o bianco):"))
+        self.img_path = PathEdit("", "open", T('Immagini (*.png *.jpg *.jpeg *.bmp)'))
+        l3.addWidget(QLabel(T('Immagine della firma (meglio PNG con sfondo trasparente o bianco):')))
         l3.addWidget(self.img_path)
-        self.remove_white = QCheckBox("Rendi trasparente lo sfondo bianco")
+        self.remove_white = QCheckBox(T('Rendi trasparente lo sfondo bianco'))
         self.remove_white.setChecked(True)
         l3.addWidget(self.remove_white)
         l3.addStretch()
-        self.tabs.addTab(w3, "Immagine")
+        self.tabs.addTab(w3, T('Immagine'))
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Salva firma")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Ok).setText(T('Salva firma'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self._ok)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -455,14 +453,14 @@ class SignatureDialog(QDialog):
         f = self.font.currentFont()
         f.setPointSize(36)
         self.preview.setFont(f)
-        self.preview.setText(self.name.text() or "Firma")
+        self.preview.setText(self.name.text() or T('Firma'))
 
     def _text_image(self) -> QImage:
         f = self.font.currentFont()
         f.setPixelSize(140)
         from PySide6.QtGui import QFontMetrics
         fm = QFontMetrics(f)
-        text = self.name.text() or "Firma"
+        text = self.name.text() or T('Firma')
         w = fm.horizontalAdvance(text) + 60
         h = fm.height() + 40
         img = QImage(w, h, QImage.Format_ARGB32)
@@ -480,7 +478,7 @@ class SignatureDialog(QDialog):
         if tab == 0:
             img = self.pad.to_image()
             if img is None:
-                QMessageBox.information(self, "Firma", "Disegna la firma nel riquadro.")
+                QMessageBox.information(self, T('Firma'), T('Disegna la firma nel riquadro.'))
                 return
         elif tab == 1:
             if not self.name.text().strip():
@@ -489,7 +487,7 @@ class SignatureDialog(QDialog):
         else:
             path = self.img_path.text()
             if not os.path.exists(path):
-                QMessageBox.information(self, "Firma", "Scegli un'immagine.")
+                QMessageBox.information(self, T('Firma'), T("Scegli un'immagine."))
                 return
             img = QImage(path).convertToFormat(QImage.Format_ARGB32)
             if self.remove_white.isChecked():
@@ -510,7 +508,7 @@ class SignaturePicker(QDialog):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setWindowTitle("Firme salvate")
+        self.setWindowTitle(T('Firme salvate'))
         self.resize(520, 380)
         lay = QVBoxLayout(self)
         self.list = QListWidget()
@@ -520,17 +518,17 @@ class SignaturePicker(QDialog):
         self.list.itemDoubleClicked.connect(lambda _: self.accept())
         lay.addWidget(self.list)
         row = QHBoxLayout()
-        b = QPushButton("Nuova firma…")
+        b = QPushButton(T('Nuova firma…'))
         b.clicked.connect(self.new)
-        d = QPushButton("Elimina")
+        d = QPushButton(T('Elimina'))
         d.clicked.connect(self.delete)
         row.addWidget(b)
         row.addWidget(d)
         row.addStretch()
         lay.addLayout(row)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Usa questa firma")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Ok).setText(T('Usa questa firma'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -559,7 +557,7 @@ class SignaturePicker(QDialog):
 
     def delete(self):
         it = self.list.currentItem()
-        if it and QMessageBox.question(self, "Elimina firma", "Eliminare la firma selezionata?") == QMessageBox.Yes:
+        if it and QMessageBox.question(self, T('Elimina firma'), T('Eliminare la firma selezionata?')) == QMessageBox.Yes:
             os.remove(it.data(Qt.UserRole))
             self.load()
 
@@ -573,17 +571,17 @@ class CompressDialog(QDialog):
     def __init__(self, parent, size_now: int):
         super().__init__(parent)
         from .ops.compress import PRESETS
-        self.setWindowTitle("Riduci dimensione file")
+        self.setWindowTitle(T('Riduci dimensione file'))
         lay = QVBoxLayout(self)
-        l = QLabel(f"Dimensione attuale: <b>{human_size(size_now)}</b>")
+        l = QLabel(T('Dimensione attuale: <b>{}</b>').format(human_size(size_now)))
         lay.addWidget(l)
         self.preset = QComboBox()
         for name in PRESETS:
-            self.preset.addItem(name)
-        self.preset.addItem("Personalizzata")
+            self.preset.addItem(T(name), name)
+        self.preset.addItem(T('Personalizzata'), "Personalizzata")
         self.preset.setCurrentIndex(1)
         f = QFormLayout()
-        f.addRow("Livello:", self.preset)
+        f.addRow(T('Livello:'), self.preset)
         self.dpi = QSpinBox()
         self.dpi.setRange(36, 600)
         self.dpi.setValue(150)
@@ -592,25 +590,25 @@ class CompressDialog(QDialog):
         self.q.setRange(10, 100)
         self.q.setValue(72)
         self.q.setSuffix(" %")
-        f.addRow("Risoluzione immagini:", self.dpi)
-        f.addRow("Qualità JPEG:", self.q)
+        f.addRow(T('Risoluzione immagini:'), self.dpi)
+        f.addRow(T('Qualità JPEG:'), self.q)
         lay.addLayout(f)
-        self.gray = QCheckBox("Converti le immagini in scala di grigi")
-        self.fonts = QCheckBox("Riduci i font incorporati ai soli caratteri usati")
+        self.gray = QCheckBox(T('Converti le immagini in scala di grigi'))
+        self.fonts = QCheckBox(T('Riduci i font incorporati ai soli caratteri usati'))
         self.fonts.setChecked(True)
-        self.meta = QCheckBox("Rimuovi metadati")
-        self.thumbs = QCheckBox("Rimuovi miniature incorporate")
+        self.meta = QCheckBox(T('Rimuovi metadati'))
+        self.thumbs = QCheckBox(T('Rimuovi miniature incorporate'))
         self.thumbs.setChecked(True)
-        self.emb = QCheckBox("Rimuovi file allegati")
-        self.ann = QCheckBox("Rimuovi annotazioni e commenti")
-        self.flat = QCheckBox("Appiattisci i moduli")
+        self.emb = QCheckBox(T('Rimuovi file allegati'))
+        self.ann = QCheckBox(T('Rimuovi annotazioni e commenti'))
+        self.flat = QCheckBox(T('Appiattisci i moduli'))
         for w in (self.gray, self.fonts, self.meta, self.thumbs, self.emb, self.ann, self.flat):
             lay.addWidget(w)
-        self.preset.currentTextChanged.connect(self._preset)
-        self._preset(self.preset.currentText())
+        self.preset.currentIndexChanged.connect(lambda _i: self._preset(self.preset.currentData()))
+        self._preset(self.preset.currentData())
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Comprimi")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Ok).setText(T('Comprimi'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -627,7 +625,7 @@ class CompressDialog(QDialog):
 
     def options(self):
         from .ops.compress import PRESETS, CompressOptions
-        name = self.preset.currentText()
+        name = self.preset.currentData()
         images = PRESETS.get(name, True) is not None
         return CompressOptions(images=images, dpi_threshold=int(self.dpi.value() * 1.2), dpi_target=self.dpi.value(),
                                quality=self.q.value(), grayscale=self.gray.isChecked(),
@@ -641,43 +639,43 @@ class EncryptDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         from .ops.security import PERMISSIONS
-        self.setWindowTitle("Proteggi con password")
+        self.setWindowTitle(T('Proteggi con password'))
         lay = QVBoxLayout(self)
-        g1 = QGroupBox("Password di apertura")
+        g1 = QGroupBox(T('Password di apertura'))
         f1 = QFormLayout(g1)
-        self.use_user = QCheckBox("Richiedi una password per aprire il documento")
+        self.use_user = QCheckBox(T('Richiedi una password per aprire il documento'))
         self.user = QLineEdit()
         self.user.setEchoMode(QLineEdit.Password)
         self.user2 = QLineEdit()
         self.user2.setEchoMode(QLineEdit.Password)
         f1.addRow(self.use_user)
-        f1.addRow("Password:", self.user)
-        f1.addRow("Conferma:", self.user2)
+        f1.addRow(T('Password:'), self.user)
+        f1.addRow(T('Conferma:'), self.user2)
         lay.addWidget(g1)
-        g2 = QGroupBox("Restrizioni (password dei permessi)")
+        g2 = QGroupBox(T('Restrizioni (password dei permessi)'))
         v2 = QVBoxLayout(g2)
-        self.use_owner = QCheckBox("Limita stampa e modifica")
+        self.use_owner = QCheckBox(T('Limita stampa e modifica'))
         self.use_owner.setChecked(True)
         v2.addWidget(self.use_owner)
         f2 = QFormLayout()
         self.owner = QLineEdit()
         self.owner.setEchoMode(QLineEdit.Password)
-        f2.addRow("Password dei permessi:", self.owner)
+        f2.addRow(T('Password dei permessi:'), self.owner)
         v2.addLayout(f2)
         self.perms = []
         for label, flag in PERMISSIONS:
-            cb = QCheckBox(f"Consenti: {label}")
+            cb = QCheckBox(T('Consenti: {}').format(label))
             cb.setChecked(flag in (pymupdf.PDF_PERM_PRINT, pymupdf.PDF_PERM_PRINT_HQ, pymupdf.PDF_PERM_ACCESSIBILITY,
                                    pymupdf.PDF_PERM_FORM))
             self.perms.append((cb, flag))
             v2.addWidget(cb)
         lay.addWidget(g2)
-        note = QLabel("Cifratura AES a 256 bit. La protezione viene applicata al salvataggio.")
+        note = QLabel(T('Cifratura AES a 256 bit. La protezione viene applicata al salvataggio.'))
         note.setObjectName("muted")
         lay.addWidget(note)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Applica")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Ok).setText(T('Applica'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Annulla'))
         bb.accepted.connect(self._ok)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -685,19 +683,19 @@ class EncryptDialog(QDialog):
     def _ok(self):
         if self.use_user.isChecked():
             if not self.user.text():
-                QMessageBox.warning(self, "Password", "Inserisci la password di apertura.")
+                QMessageBox.warning(self, T('Password'), T('Inserisci la password di apertura.'))
                 return
             if self.user.text() != self.user2.text():
-                QMessageBox.warning(self, "Password", "Le due password di apertura non coincidono.")
+                QMessageBox.warning(self, T('Password'), T('Le due password di apertura non coincidono.'))
                 return
         if self.use_owner.isChecked() and not self.owner.text():
-            QMessageBox.warning(self, "Password", "Inserisci la password dei permessi.")
+            QMessageBox.warning(self, T('Password'), T('Inserisci la password dei permessi.'))
             return
         if self.use_owner.isChecked() and self.use_user.isChecked() and self.owner.text() == self.user.text():
-            QMessageBox.warning(self, "Password", "La password dei permessi deve essere diversa da quella di apertura.")
+            QMessageBox.warning(self, T('Password'), T('La password dei permessi deve essere diversa da quella di apertura.'))
             return
         if not self.use_user.isChecked() and not self.use_owner.isChecked():
-            QMessageBox.warning(self, "Protezione", "Scegli almeno una delle due protezioni.")
+            QMessageBox.warning(self, T('Protezione'), T('Scegli almeno una delle due protezioni.'))
             return
         self.accept()
 
@@ -717,7 +715,7 @@ class PropertiesDialog(QDialog):
     def __init__(self, parent, model):
         super().__init__(parent)
         from .ops import security as SEC
-        self.setWindowTitle("Proprietà del documento")
+        self.setWindowTitle(T('Proprietà del documento'))
         self.resize(620, 560)
         self.model = model
         lay = QVBoxLayout(self)
@@ -732,12 +730,12 @@ class PropertiesDialog(QDialog):
             e = QLineEdit(md.get(key, "") or "")
             self.fields[key] = e
             f.addRow(label + ":", e)
-        tabs.addTab(w, "Descrizione")
+        tabs.addTab(w, T('Descrizione'))
         # informazioni
         size = os.path.getsize(model.path) if model.path and os.path.exists(model.path) else None
         rows = SEC.document_info(model.doc, model.path, size)
         t = QTableWidget(len(rows), 2)
-        t.setHorizontalHeaderLabels(["Proprietà", "Valore"])
+        t.setHorizontalHeaderLabels([T('Proprietà'), T('Valore')])
         t.verticalHeader().setVisible(False)
         t.horizontalHeader().setStretchLastSection(True)
         t.setColumnWidth(0, 160)
@@ -747,7 +745,7 @@ class PropertiesDialog(QDialog):
             t.setItem(i, 0, QTableWidgetItem(k))
             t.setItem(i, 1, QTableWidgetItem(v))
         t.resizeRowsToContents()
-        tabs.addTab(t, "Informazioni")
+        tabs.addTab(t, T('Informazioni'))
         # permessi
         perm = QWidget()
         pv = QVBoxLayout(perm)
@@ -755,10 +753,10 @@ class PropertiesDialog(QDialog):
             ok = bool(model.doc.permissions & flag)
             pv.addWidget(QLabel(("✔  " if ok else "✖  ") + label))
         pv.addStretch()
-        tabs.addTab(perm, "Sicurezza")
+        tabs.addTab(perm, T('Sicurezza'))
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Ok).setText("Salva proprietà")
-        bb.button(QDialogButtonBox.Cancel).setText("Chiudi")
+        bb.button(QDialogButtonBox.Ok).setText(T('Salva proprietà'))
+        bb.button(QDialogButtonBox.Cancel).setText(T('Chiudi'))
         bb.accepted.connect(self.accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
@@ -780,16 +778,16 @@ class ReportDialog(QDialog):
         row = QHBoxLayout()
         row.addStretch()
         if save_name:
-            b = QPushButton("Salva come HTML…")
+            b = QPushButton(T('Salva come HTML…'))
             b.clicked.connect(lambda: self._save(html, save_name))
             row.addWidget(b)
-        c = QPushButton("Chiudi")
+        c = QPushButton(T('Chiudi'))
         c.clicked.connect(self.accept)
         row.addWidget(c)
         lay.addLayout(row)
 
     def _save(self, html, name):
-        p, _ = QFileDialog.getSaveFileName(self, "Salva report", name, "HTML (*.html)")
+        p, _ = QFileDialog.getSaveFileName(self, T('Salva report'), name, T('HTML (*.html)'))
         if p:
             with open(p, "w", encoding="utf-8") as f:
                 f.write(html)
@@ -797,20 +795,22 @@ class ReportDialog(QDialog):
 
 # ================================================================ impostazioni
 def settings_dialog(parent, tools) -> dict | None:
-    return ask(parent, "Impostazioni", [
-        ("section", "Aspetto", "section"),
-        ("theme", "Tema", "choice", settings.get("theme", "light"),
-         [("Chiaro", "light"), ("Scuro", "dark"), ("Come Windows", "system")]),
-        ("zoom", "Zoom all'apertura", "choice", settings.get("open_zoom", "width"),
-         [("Adatta alla larghezza", "width"), ("Pagina intera", "page"), ("100%", "100")]),
-        ("layout", "Visualizzazione all'apertura", "choice", settings.get("open_layout", "continuous"),
-         [("Pagine continue", "continuous"), ("Pagina singola", "single"), ("Due pagine affiancate", "two")]),
-        ("section", "Commenti e modifica", "section"),
-        ("author", "Nome autore", "str", tools.author),
-        ("keep_tool", "Mantieni lo strumento attivo dopo l'uso", "bool", tools.keep_tool),
-        ("text_family", "Font predefinito per il testo nuovo", "font", tools.text_family),
-        ("text_size", "Corpo predefinito (pt)", "float", tools.text_size, (4, 200)),
-        ("section", "Generale", "section"),
-        ("restore", "Riapri i documenti dell'ultima sessione", "bool", settings.get("restore_session", False, bool)),
-        ("highlight_fields", "Evidenzia i campi dei moduli", "bool", settings.get("highlight_fields", True, bool)),
-    ], ok_text="Salva")
+    from . import i18n
+    return ask(parent, T('Impostazioni'), [
+        ("section", T('Aspetto'), "section"),
+        ("language", T("Lingua dell'interfaccia"), "choice", i18n.LANG, [(name, code) for code, name in i18n.LANGUAGES]),
+        ("theme", T('Tema'), "choice", settings.get("theme", "light"),
+         [(T('Chiaro'), "light"), (T('Scuro'), "dark"), (T('Come Windows'), "system")]),
+        ("zoom", T("Zoom all'apertura"), "choice", settings.get("open_zoom", "width"),
+         [(T('Adatta alla larghezza'), "width"), (T('Pagina intera'), "page"), ("100%", "100")]),
+        ("layout", T("Visualizzazione all'apertura"), "choice", settings.get("open_layout", "continuous"),
+         [(T('Pagine continue'), "continuous"), (T('Pagina singola'), "single"), (T('Due pagine affiancate'), "two")]),
+        ("section", T('Commenti e modifica'), "section"),
+        ("author", T('Nome autore'), "str", tools.author),
+        ("keep_tool", T("Mantieni lo strumento attivo dopo l'uso"), "bool", tools.keep_tool),
+        ("text_family", T('Font predefinito per il testo nuovo'), "font", tools.text_family),
+        ("text_size", T('Corpo predefinito (pt)'), "float", tools.text_size, (4, 200)),
+        ("section", T('Generale'), "section"),
+        ("restore", T("Riapri i documenti dell'ultima sessione"), "bool", settings.get("restore_session", False, bool)),
+        ("highlight_fields", T('Evidenzia i campi dei moduli'), "bool", settings.get("highlight_fields", True, bool)),
+    ], ok_text=T('Salva'))

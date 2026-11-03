@@ -25,6 +25,7 @@ import pymupdf
 
 from .. import fonts
 from .common import DICT_FLAGS, apply_internal_redactions, int_to_hex, search_page
+from ..i18n import T
 
 ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFY = 0, 1, 2, 3
 _ALIGN_CSS = {0: "left", 1: "center", 2: "right", 3: "justify"}
@@ -33,7 +34,7 @@ _ALIGN_CSS = {0: "left", 1: "center", 2: "right", 3: "justify"}
 @dataclass
 class Run:
     text: str
-    family: str = "Arial"
+    family: str = T('Arial')
     size: float = 11.0
     bold: bool = False
     italic: bool = False
@@ -243,7 +244,7 @@ class FontResolver:
         path = fonts.font_file(family, run.bold, run.italic)
         if not path:
             if family != fonts.FALLBACK_FAMILY:
-                w = f"Font «{family}» non disponibile: usato {fonts.FALLBACK_FAMILY}"
+                w = T('Font «{}» non disponibile: usato {}').format(family, fonts.FALLBACK_FAMILY)
                 if w not in self.warnings:
                     self.warnings.append(w)
             family = fonts.FALLBACK_FAMILY

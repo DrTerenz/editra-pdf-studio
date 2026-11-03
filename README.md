@@ -4,13 +4,14 @@
 View, edit, annotate, organize, sign, protect, OCR and convert PDF files, all in one desktop app,
 with no subscription, no account and no cloud upload.
 
-[⬇ Download the latest release](../../releases/latest) · Windows 10/11 (64-bit) · Italian interface
+[⬇ Download the latest release](../../releases/latest) · Windows 10/11 (64-bit) · English and Italian interface
 
 ![Editing text inside a PDF](docs/screenshots/edit-text.png)
 
 ## Features
 
 **View**
+- English and Italian interface, switchable in Settings (more languages can be added in `editra/lang/`)
 - Tabs, continuous / single / two-page layouts, fit width or page, zoom to area, Ctrl+wheel zoom
 - Thumbnails, bookmarks, layers, attachments, full-text search with hit highlighting
 - Full screen, presentation mode, night reading mode, light and dark theme, read aloud
@@ -102,7 +103,6 @@ interface with simulated mouse and keyboard input (122 checks). Both run headles
 - Signature validation is offline: certificate revocation (OCSP/CRL) is not checked.
   Smart cards and remote signing are not supported; signing requires a .pfx/.p12 file.
 - PDF/A conversion and accessibility tagging are not available.
-- The interface is in Italian.
 
 ## How it was made
 

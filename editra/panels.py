@@ -19,6 +19,7 @@ from .ops import annots as A
 from .ops import pages as PG
 from .ops.common import SEARCH_FLAGS, format_ranges, human_size
 from .view import DocumentView
+from .i18n import T
 
 
 def _title(text: str) -> QLabel:
@@ -70,17 +71,17 @@ class ThumbList(QListWidget):
 
 
 class ThumbnailPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         head = QHBoxLayout()
-        head.addWidget(_title("Pagine"))
+        head.addWidget(_title(T('Pagine')))
         head.addStretch()
-        head.addWidget(_tool("rotate", "Ruota a destra le pagine selezionate", lambda: self._act("rotate_right")))
-        head.addWidget(_tool("delete", "Elimina le pagine selezionate", lambda: self._act("delete")))
-        head.addWidget(_tool("add", "Inserisci pagina vuota dopo", lambda: self._act("blank_after")))
+        head.addWidget(_tool("rotate", T('Ruota a destra le pagine selezionate'), lambda: self._act("rotate_right")))
+        head.addWidget(_tool("delete", T('Elimina le pagine selezionate'), lambda: self._act("delete")))
+        head.addWidget(_tool("add", T('Inserisci pagina vuota dopo'), lambda: self._act("blank_after")))
         lay.addLayout(head)
         self.list = ThumbList()
         lay.addWidget(self.list)
@@ -168,7 +169,7 @@ class ThumbnailPanel(QWidget):
 
     def _moved(self, rows: list, to: int) -> None:
         model = self.tab.model
-        with model.edit("Sposta pagine", structure=True):
+        with model.edit(T('Sposta pagine'), structure=True):
             new = PG.move_pages(model.doc, rows, to)
         self.tab.view.go_to_page(new[0])
 
@@ -178,17 +179,17 @@ class ThumbnailPanel(QWidget):
     def _menu(self, pos) -> None:
         pages = self.selected_pages()
         m = QMenu(self)
-        label = f"pagine {format_ranges(pages)}" if len(pages) > 1 else f"pagina {pages[0] + 1}"
+        label = T('pagine {}').format(format_ranges(pages)) if len(pages) > 1 else T('pagina {}').format(pages[0] + 1)
         m.addSection(label.capitalize())
-        for what, text, ic in (("rotate_right", "Ruota a destra", "rotate"), ("rotate_left", "Ruota a sinistra", "rotate"),
-                               ("rotate_180", "Ruota di 180°", "rotate"), (None, None, None),
-                               ("duplicate", "Duplica", "copy"), ("extract", "Estrai in un nuovo file…", "extract"),
-                               ("export_images", "Esporta come immagini…", "image"), (None, None, None),
-                               ("blank_before", "Inserisci pagina vuota prima", "blank"),
-                               ("blank_after", "Inserisci pagina vuota dopo", "blank"),
-                               ("insert_file", "Inserisci da file…", "import"),
-                               ("replace", "Sostituisci con pagine di un altro file…", "replace"), (None, None, None),
-                               ("crop", "Ritaglia…", "crop"), ("delete", "Elimina", "delete")):
+        for what, text, ic in (("rotate_right", T('Ruota a destra'), "rotate"), ("rotate_left", T('Ruota a sinistra'), "rotate"),
+                               ("rotate_180", T('Ruota di 180°'), "rotate"), (None, None, None),
+                               ("duplicate", T('Duplica'), "copy"), ("extract", T('Estrai in un nuovo file…'), "extract"),
+                               ("export_images", T('Esporta come immagini…'), "image"), (None, None, None),
+                               ("blank_before", T('Inserisci pagina vuota prima'), "blank"),
+                               ("blank_after", T('Inserisci pagina vuota dopo'), "blank"),
+                               ("insert_file", T('Inserisci da file…'), "import"),
+                               ("replace", T('Sostituisci con pagine di un altro file…'), "replace"), (None, None, None),
+                               ("crop", T('Ritaglia…'), "crop"), ("delete", T('Elimina'), "delete")):
             if what is None:
                 m.addSeparator()
                 continue
@@ -198,31 +199,31 @@ class ThumbnailPanel(QWidget):
 
 # ===================================================================== segnalibri
 class BookmarkPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         head = QHBoxLayout()
-        head.addWidget(_title("Segnalibri"))
+        head.addWidget(_title(T('Segnalibri')))
         head.addStretch()
-        head.addWidget(_tool("add", "Nuovo segnalibro per la pagina corrente", self.add))
-        head.addWidget(_tool("edit", "Rinomina", self.rename))
-        head.addWidget(_tool("delete", "Elimina", self.delete))
+        head.addWidget(_tool("add", T('Nuovo segnalibro per la pagina corrente'), self.add))
+        head.addWidget(_tool("edit", T('Rinomina'), self.rename))
+        head.addWidget(_tool("delete", T('Elimina'), self.delete))
         lay.addLayout(head)
         row = QHBoxLayout()
         row.addStretch()
-        row.addWidget(_tool("up", "Sposta su", lambda: self.move(-1)))
-        row.addWidget(_tool("down", "Sposta giù", lambda: self.move(1)))
-        row.addWidget(_tool("prev", "Livello superiore", self.outdent))
-        row.addWidget(_tool("next", "Sotto il precedente", self.indent))
+        row.addWidget(_tool("up", T('Sposta su'), lambda: self.move(-1)))
+        row.addWidget(_tool("down", T('Sposta giù'), lambda: self.move(1)))
+        row.addWidget(_tool("prev", T('Livello superiore'), self.outdent))
+        row.addWidget(_tool("next", T('Sotto il precedente'), self.indent))
         lay.addLayout(row)
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.itemClicked.connect(self._go)
         self.tree.itemDoubleClicked.connect(lambda it, c: self.rename())
         lay.addWidget(self.tree)
-        self.empty = QLabel("Nessun segnalibro.\nUsa + per crearne uno sulla pagina corrente.")
+        self.empty = QLabel(T('Nessun segnalibro.\nUsa + per crearne uno sulla pagina corrente.'))
         self.empty.setObjectName("muted")
         self.empty.setAlignment(Qt.AlignCenter)
         self.empty.setWordWrap(True)
@@ -248,7 +249,7 @@ class BookmarkPanel(QWidget):
                 except Exception:
                     y = None
             it.setData(0, Qt.UserRole, (page, y))
-            it.setToolTip(0, f"Pagina {page}")
+            it.setToolTip(0, T('Pagina {}').format(page))
             parents[lvl] = it
         self.tree.expandToDepth(0)
         self.empty.setVisible(not toc)
@@ -279,8 +280,8 @@ class BookmarkPanel(QWidget):
     def add(self, page: int | None = None, title: str | None = None) -> None:
         p = self.tab.view.current if page is None else page
         default = title or (self.tab.view.sel_text.strip().split("\n")[0][:80] if self.tab.view.sel_text else
-                            f"Pagina {p + 1}")
-        text, ok = QInputDialog.getText(self, "Nuovo segnalibro", "Titolo:", text=default)
+                            T('Pagina {}').format(p + 1))
+        text, ok = QInputDialog.getText(self, T('Nuovo segnalibro'), T('Titolo:'), text=default)
         if not ok or not text.strip():
             return
         it = QTreeWidgetItem([text.strip()])
@@ -289,7 +290,7 @@ class BookmarkPanel(QWidget):
         parent = cur.parent() if cur else None
         (parent or self.tree.invisibleRootItem()).addChild(it)
         self._sort_siblings(parent or self.tree.invisibleRootItem())
-        self._save("Aggiungi segnalibro")
+        self._save(T('Aggiungi segnalibro'))
 
     @staticmethod
     def _sort_siblings(parent) -> None:
@@ -302,17 +303,17 @@ class BookmarkPanel(QWidget):
         it = self.tree.currentItem()
         if not it:
             return
-        text, ok = QInputDialog.getText(self, "Rinomina segnalibro", "Titolo:", text=it.text(0))
+        text, ok = QInputDialog.getText(self, T('Rinomina segnalibro'), T('Titolo:'), text=it.text(0))
         if ok and text.strip():
             it.setText(0, text.strip())
-            self._save("Rinomina segnalibro")
+            self._save(T('Rinomina segnalibro'))
 
     def delete(self) -> None:
         it = self.tree.currentItem()
         if not it:
             return
         (it.parent() or self.tree.invisibleRootItem()).removeChild(it)
-        self._save("Elimina segnalibro")
+        self._save(T('Elimina segnalibro'))
 
     def move(self, d: int) -> None:
         it = self.tree.currentItem()
@@ -325,7 +326,7 @@ class BookmarkPanel(QWidget):
             parent.takeChild(i)
             parent.insertChild(j, it)
             self.tree.setCurrentItem(it)
-            self._save("Sposta segnalibro")
+            self._save(T('Sposta segnalibro'))
 
     def indent(self) -> None:
         it = self.tree.currentItem()
@@ -340,7 +341,7 @@ class BookmarkPanel(QWidget):
         prev.addChild(it)
         prev.setExpanded(True)
         self.tree.setCurrentItem(it)
-        self._save("Sposta segnalibro")
+        self._save(T('Sposta segnalibro'))
 
     def outdent(self) -> None:
         it = self.tree.currentItem()
@@ -351,24 +352,24 @@ class BookmarkPanel(QWidget):
         parent.removeChild(it)
         gp.insertChild(gp.indexOfChild(parent) + 1, it)
         self.tree.setCurrentItem(it)
-        self._save("Sposta segnalibro")
+        self._save(T('Sposta segnalibro'))
 
 
 # ======================================================================= commenti
 class CommentsPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         head = QHBoxLayout()
-        head.addWidget(_title("Commenti"))
+        head.addWidget(_title(T('Commenti')))
         head.addStretch()
-        head.addWidget(_tool("export", "Riepilogo dei commenti (HTML)", lambda: tab.window().run_action("comments_summary")))
-        head.addWidget(_tool("delete", "Elimina il commento selezionato", self.delete))
+        head.addWidget(_tool("export", T('Riepilogo dei commenti (HTML)'), lambda: tab.window().run_action("comments_summary")))
+        head.addWidget(_tool("delete", T('Elimina il commento selezionato'), self.delete))
         lay.addLayout(head)
         self.filter = QLineEdit()
-        self.filter.setPlaceholderText("Filtra per testo, autore o tipo…")
+        self.filter.setPlaceholderText(T('Filtra per testo, autore o tipo…'))
         self.filter.textChanged.connect(self.load)
         lay.addWidget(self.filter)
         self.tree = QTreeWidget()
@@ -408,7 +409,7 @@ class CommentsPanel(QWidget):
                 continue
             g = groups.get(d["page"])
             if g is None:
-                g = groups[d["page"]] = QTreeWidgetItem(self.tree, [f"Pagina {d['page'] + 1}"])
+                g = groups[d["page"]] = QTreeWidgetItem(self.tree, [T('Pagina {}').format(d['page'] + 1)])
                 f = g.font(0)
                 f.setBold(True)
                 g.setFont(0, f)
@@ -421,7 +422,7 @@ class CommentsPanel(QWidget):
                 it.setIcon(0, icons.color_swatch(d["color"], 12))
             n += 1
         self.tree.expandAll()
-        self.count.setText(f"  {n} commenti" if n != 1 else "  1 commento")
+        self.count.setText(T('  {} commenti').format(n) if n != 1 else T('  1 commento'))
 
     def _go(self, it, col=0):
         data = it.data(0, Qt.UserRole)
@@ -457,18 +458,18 @@ BLOCKED_EXT = (".exe", ".bat", ".cmd", ".com", ".scr", ".js", ".vbs", ".ps1", ".
 
 
 class AttachmentsPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         head = QHBoxLayout()
-        head.addWidget(_title("Allegati"))
+        head.addWidget(_title(T('Allegati')))
         head.addStretch()
-        head.addWidget(_tool("add", "Allega un file al documento", self.add))
-        head.addWidget(_tool("save", "Salva l'allegato selezionato", self.extract))
-        head.addWidget(_tool("open", "Apri l'allegato selezionato", self.open))
-        head.addWidget(_tool("delete", "Elimina l'allegato selezionato", self.delete))
+        head.addWidget(_tool("add", T('Allega un file al documento'), self.add))
+        head.addWidget(_tool("save", T("Salva l'allegato selezionato"), self.extract))
+        head.addWidget(_tool("open", T("Apri l'allegato selezionato"), self.open))
+        head.addWidget(_tool("delete", T("Elimina l'allegato selezionato"), self.delete))
         lay.addLayout(head)
         self.list = QListWidget()
         self.list.itemDoubleClicked.connect(lambda it: self.open())
@@ -493,7 +494,7 @@ class AttachmentsPanel(QWidget):
             for a in page.annots(types=[pymupdf.PDF_ANNOT_FILE_ATTACHMENT]):
                 try:
                     info = a.file_info
-                    it = QListWidgetItem(icons.icon("pin"), f"{info.get('filename')}  (pag. {pno + 1})")
+                    it = QListWidgetItem(icons.icon("pin"), T('{}  (pag. {})').format(info.get('filename'), pno + 1))
                     it.setData(Qt.UserRole, ("annot", pno, a.xref))
                     self.list.addItem(it)
                 except Exception:
@@ -512,10 +513,10 @@ class AttachmentsPanel(QWidget):
         return a.file_info.get("filename"), a.get_file()
 
     def add(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(self, "Allega file")
+        paths, _ = QFileDialog.getOpenFileNames(self, T('Allega file'))
         if not paths:
             return
-        with self.tab.model.edit("Allega file", pages=[]):
+        with self.tab.model.edit(T('Allega file'), pages=[]):
             for p in paths:
                 name = os.path.basename(p)
                 existing = set(self.tab.model.doc.embfile_names())
@@ -532,7 +533,7 @@ class AttachmentsPanel(QWidget):
         name, data = self._data()
         if data is None:
             return
-        path, _ = QFileDialog.getSaveFileName(self, "Salva allegato", name)
+        path, _ = QFileDialog.getSaveFileName(self, T('Salva allegato'), name)
         if path:
             with open(path, "wb") as f:
                 f.write(data)
@@ -542,9 +543,8 @@ class AttachmentsPanel(QWidget):
         if data is None:
             return
         if os.path.splitext(name or "")[1].lower() in BLOCKED_EXT:
-            QMessageBox.warning(self, "Allegato bloccato",
-                                "Per sicurezza i programmi e gli script allegati non vengono aperti.\n"
-                                "Puoi salvarli e controllarli con l'antivirus.")
+            QMessageBox.warning(self, T('Allegato bloccato'),
+                                T("Per sicurezza i programmi e gli script allegati non vengono aperti.\nPuoi salvarli e controllarli con l'antivirus."))
             return
         d = tempfile.mkdtemp(prefix="editra_allegato_")
         p = os.path.join(d, os.path.basename(name or "allegato"))
@@ -557,7 +557,7 @@ class AttachmentsPanel(QWidget):
         if not it:
             return
         d = it.data(Qt.UserRole)
-        with self.tab.model.edit("Elimina allegato", pages=None if d[0] == "emb" else [d[1]]):
+        with self.tab.model.edit(T('Elimina allegato'), pages=None if d[0] == "emb" else [d[1]]):
             doc = self.tab.model.doc
             if d[0] == "emb":
                 doc.embfile_del(d[1])
@@ -571,15 +571,15 @@ class AttachmentsPanel(QWidget):
 
 # ========================================================================== firme
 class SignaturesPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         head = QHBoxLayout()
-        head.addWidget(_title("Firme digitali"))
+        head.addWidget(_title(T('Firme digitali')))
         head.addStretch()
-        head.addWidget(_tool("refresh", "Verifica di nuovo", self.verify))
+        head.addWidget(_tool("refresh", T('Verifica di nuovo'), self.verify))
         lay.addLayout(head)
         self.list = QListWidget()
         self.list.setWordWrap(True)
@@ -591,10 +591,10 @@ class SignaturesPanel(QWidget):
         self.info.setObjectName("muted")
         lay.addWidget(self.info)
         btns = QHBoxLayout()
-        b1 = QPushButton("Dettagli")
+        b1 = QPushButton(T('Dettagli'))
         b1.clicked.connect(lambda: self._details(self.list.currentItem()))
-        b2 = QPushButton("Considera attendibile")
-        b2.setToolTip("Aggiunge il certificato del firmatario a quelli attendibili")
+        b2 = QPushButton(T('Considera attendibile'))
+        b2.setToolTip(T('Aggiunge il certificato del firmatario a quelli attendibili'))
         b2.clicked.connect(self.trust)
         btns.addWidget(b1)
         btns.addWidget(b2)
@@ -614,17 +614,16 @@ class SignaturesPanel(QWidget):
         self.list.clear()
         model = self.tab.model
         if not model.has_signatures():
-            self.info.setText("Il documento non contiene firme digitali.\n"
-                              "Per firmare: Proteggi › Firma con certificato.")
+            self.info.setText(T('Il documento non contiene firme digitali.\nPer firmare: Proteggi › Firma con certificato.'))
             self.results = []
             return
-        self.info.setText("Verifica in corso…")
+        self.info.setText(T('Verifica in corso…'))
         self.repaint()
         try:
             data = model.current_bytes()
             self.results = SG.verify_pdf(data)
         except Exception as ex:
-            self.info.setText(f"Impossibile verificare le firme: {ex}")
+            self.info.setText(T('Impossibile verificare le firme: {}').format(ex))
             return
         locs = SG.locate_signature_fields(model.doc)
         icons_by = {"valida": ("check", "#2e7d32"), "sconosciuta": ("warning", "#f9a825"),
@@ -634,8 +633,8 @@ class SignaturesPanel(QWidget):
             if loc:
                 r.page, r.rect = loc
             st = r.status
-            label = {"valida": "Firma valida", "sconosciuta": "Firma integra, identità non verificata",
-                     "modificata": "Firma valida, documento modificato dopo", "non_valida": "Firma NON valida"}[st]
+            label = {"valida": T('Firma valida'), "sconosciuta": T('Firma integra, identità non verificata'),
+                     "modificata": T('Firma valida, documento modificato dopo'), "non_valida": T('Firma NON valida')}[st]
             it = QListWidgetItem(f"{label}\n{r.signer}" + (f" · {r.time}" if r.time else ""))
             ic, col = icons_by[st]
             it.setIcon(QIcon(icons.glyph_pixmap(ic, 20, QColor(col))))
@@ -643,9 +642,9 @@ class SignaturesPanel(QWidget):
             it.setToolTip(r.summary)
             self.list.addItem(it)
         ok = all(r.status == "valida" for r in self.results)
-        self.info.setText(("Tutte le firme sono valide." if ok else "Alcune firme richiedono attenzione.")
+        self.info.setText((T('Tutte le firme sono valide.') if ok else T('Alcune firme richiedono attenzione.'))
                           + ("" if model.signatures_preserved_on_save() else
-                             "\nAttenzione: il prossimo salvataggio invaliderà le firme."))
+                             T('\nAttenzione: il prossimo salvataggio invaliderà le firme.')))
 
     def _go(self, it) -> None:
         r = it.data(Qt.UserRole)
@@ -656,17 +655,17 @@ class SignaturesPanel(QWidget):
         if not it:
             return
         r = it.data(Qt.UserRole)
-        rows = [("Esito", r.summary), ("Firmatario", r.signer), ("E-mail", r.email), ("Emesso da", r.issuer),
-                ("Data della firma", r.time), ("Motivo", r.reason), ("Luogo", r.location),
-                ("Certificato valido dal", r.cert_valid_from), ("al", r.cert_valid_to), ("Numero di serie", r.serial),
-                ("Campo", r.field)]
-        html = "<table cellpadding='4'>" + "".join(
+        rows = [(T('Esito'), r.summary), (T('Firmatario'), r.signer), ("E-mail", r.email), (T('Emesso da'), r.issuer),
+                (T('Data della firma'), r.time), (T('Motivo'), r.reason), (T('Luogo'), r.location),
+                (T('Certificato valido dal'), r.cert_valid_from), ("al", r.cert_valid_to), (T('Numero di serie'), r.serial),
+                (T('Campo'), r.field)]
+        html = T("<table cellpadding='4'>") + "".join(
             f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in rows if v) + "</table>"
         if r.errors:
             html += "<p><b>Problemi:</b><br>" + "<br>".join(r.errors) + "</p>"
         if r.details:
-            html += "<details><pre style='font-size:8pt'>" + r.details.replace("<", "&lt;") + "</pre>"
-        QMessageBox.information(self, "Dettagli firma", html)
+            html += T("<details><pre style='font-size:8pt'>") + r.details.replace("<", "&lt;") + "</pre>"
+        QMessageBox.information(self, T('Dettagli firma'), html)
 
     def trust(self) -> None:
         from .ops import signatures as SG
@@ -674,9 +673,8 @@ class SignaturesPanel(QWidget):
         if not it:
             return
         r = it.data(Qt.UserRole)
-        if QMessageBox.question(self, "Certificato attendibile",
-                                f"Considerare attendibile il certificato di «{r.signer}» (emesso da {r.issuer})?\n\n"
-                                "Fallo solo se sei sicuro dell'identità del firmatario.") != QMessageBox.Yes:
+        if QMessageBox.question(self, T('Certificato attendibile'),
+                                T("Considerare attendibile il certificato di «{}» (emesso da {})?\n\nFallo solo se sei sicuro dell'identità del firmatario.").format(r.signer, r.issuer)) != QMessageBox.Yes:
             return
         der = SG.cert_der_from_signature(self.tab.model.current_bytes(), r.field)
         if der:
@@ -686,12 +684,12 @@ class SignaturesPanel(QWidget):
 
 # ========================================================================= livelli
 class LayersPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.addWidget(_title("Livelli"))
+        lay.addWidget(_title(T('Livelli')))
         self.box = QVBoxLayout()
         lay.addLayout(self.box)
         lay.addStretch()
@@ -708,13 +706,13 @@ class LayersPanel(QWidget):
         except Exception:
             cfgs = []
         if not cfgs:
-            l = QLabel("Il documento non ha livelli (contenuto opzionale).")
+            l = QLabel(T('Il documento non ha livelli (contenuto opzionale).'))
             l.setObjectName("muted")
             l.setWordWrap(True)
             self.box.addWidget(l)
             return
         for c in cfgs:
-            cb = QCheckBox(("    " * c.get("depth", 0)) + (c.get("text") or "Livello"))
+            cb = QCheckBox(("    " * c.get("depth", 0)) + (c.get("text") or T('Livello')))
             cb.setChecked(bool(c.get("on")))
             cb.setEnabled(not c.get("locked"))
             cb.toggled.connect(lambda on, n=c["number"]: self._toggle(n, on))
@@ -728,29 +726,29 @@ class LayersPanel(QWidget):
 
 # ========================================================================== ricerca
 class SearchPanel(QWidget):
-    def __init__(self, tab: "DocumentTab"):
+    def __init__(self, tab: T('DocumentTab')):
         super().__init__()
         self.tab = tab
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.addWidget(_title("Cerca"))
+        lay.addWidget(_title(T('Cerca')))
         self.edit = QLineEdit()
-        self.edit.setPlaceholderText("Testo da cercare…")
+        self.edit.setPlaceholderText(T('Testo da cercare…'))
         self.edit.setClearButtonEnabled(True)
         self.edit.returnPressed.connect(self.search)
         lay.addWidget(self.edit)
         opts = QHBoxLayout()
         self.case = QCheckBox("Maiuscole/minuscole")
-        self.whole = QCheckBox("Parole intere")
+        self.whole = QCheckBox(T('Parole intere'))
         opts.addWidget(self.case)
         opts.addWidget(self.whole)
         lay.addLayout(opts)
         btns = QHBoxLayout()
-        go = QPushButton("Cerca")
+        go = QPushButton(T('Cerca'))
         go.setObjectName("primary")
         go.clicked.connect(self.search)
-        prev = _tool("up", "Risultato precedente (Maiusc+F3)", lambda: self.step(-1))
-        nxt = _tool("down", "Risultato successivo (F3)", lambda: self.step(1))
+        prev = _tool("up", T('Risultato precedente (Maiusc+F3)'), lambda: self.step(-1))
+        nxt = _tool("down", T('Risultato successivo (F3)'), lambda: self.step(1))
         btns.addWidget(go)
         btns.addStretch()
         btns.addWidget(prev)
@@ -764,11 +762,11 @@ class SearchPanel(QWidget):
         self.list.itemClicked.connect(lambda it: self._show(self.list.row(it)))
         lay.addWidget(self.list)
         acts = QHBoxLayout()
-        hl = QPushButton("Evidenzia tutti")
+        hl = QPushButton(T('Evidenzia tutti'))
         hl.clicked.connect(self.highlight_all)
-        rd = QPushButton("Redigi tutti")
+        rd = QPushButton(T('Redigi tutti'))
         rd.clicked.connect(self.redact_all)
-        rp = QPushButton("Sostituisci…")
+        rp = QPushButton(T('Sostituisci…'))
         rp.clicked.connect(lambda: tab.window().run_action("find_replace"))
         acts.addWidget(hl)
         acts.addWidget(rd)
@@ -803,10 +801,10 @@ class SearchPanel(QWidget):
             for r in rects:
                 self.hits.append((pno, r))
                 ctx = self._context(page, r)
-                it = QListWidgetItem(f"Pag. {pno + 1}: {ctx}")
+                it = QListWidgetItem(T('Pag. {}: {}').format(pno + 1, ctx))
                 self.list.addItem(it)
             QApplicationProcess()
-        self.summary.setText(f"{len(self.hits)} risultati" if self.hits else "Nessun risultato")
+        self.summary.setText(T('{} risultati').format(len(self.hits)) if self.hits else T('Nessun risultato'))
         if self.hits:
             self._show(0)
         view.viewport().update()
@@ -843,7 +841,7 @@ class SearchPanel(QWidget):
         view.current_hit = (pno, vr)
         view.ensure_visible(pno, vr)
         self.list.setCurrentRow(self.pos)
-        self.summary.setText(f"Risultato {self.pos + 1} di {len(self.hits)}")
+        self.summary.setText(T('Risultato {} di {}').format(self.pos + 1, len(self.hits)))
         view.viewport().update()
 
     def step(self, d: int) -> None:
@@ -861,7 +859,7 @@ class SearchPanel(QWidget):
         by_page = {}
         for pno, r in self.hits:
             by_page.setdefault(pno, []).append(r)
-        with self.tab.model.edit("Evidenzia risultati", list(by_page)):
+        with self.tab.model.edit(T('Evidenzia risultati'), list(by_page)):
             for pno, rects in by_page.items():
                 A.add_markup(self.tab.model.page(pno), "highlight", [r.quad for r in rects], st)
 
@@ -870,9 +868,9 @@ class SearchPanel(QWidget):
             return
         from .ops import security as SEC
         hits = [(p, r, "") for p, r in self.hits]
-        with self.tab.model.edit("Contrassegna redazioni", sorted({p for p, _ in self.hits})):
+        with self.tab.model.edit(T('Contrassegna redazioni'), sorted({p for p, _ in self.hits})):
             SEC.mark_redactions(self.tab.model.doc, hits)
-        self.tab.window().status(f"{len(hits)} aree contrassegnate. Usa «Applica redazioni» per eliminarle definitivamente.")
+        self.tab.window().status(T('{} aree contrassegnate. Usa «Applica redazioni» per eliminarle definitivamente.').format(len(hits)))
 
 
 def QApplicationProcess():
@@ -884,10 +882,10 @@ def QApplicationProcess():
 class DocumentTab(QWidget):
     """Una scheda: barra laterale con i pannelli + area di visualizzazione."""
 
-    PANELS = [("thumbs", "thumbs", "Miniature delle pagine"), ("bookmarks", "bookmarks", "Segnalibri"),
-              ("comments", "comment", "Commenti"), ("search", "search", "Cerca"),
-              ("attachments", "attach", "Allegati"), ("signatures", "certificate", "Firme digitali"),
-              ("layers", "layers", "Livelli")]
+    PANELS = [("thumbs", "thumbs", T('Miniature delle pagine')), ("bookmarks", "bookmarks", T('Segnalibri')),
+              ("comments", "comment", T('Commenti')), ("search", "search", T('Cerca')),
+              ("attachments", "attach", T('Allegati')), ("signatures", "certificate", T('Firme digitali')),
+              ("layers", "layers", T('Livelli'))]
 
     def __init__(self, model: PdfModel, tools, parent=None):
         super().__init__(parent)

@@ -24,6 +24,7 @@ from .ops import images as IM
 from .ops import textedit as TE
 from .ops.common import to_display, to_pdf
 from .settings import MARKUP_TOOLS, ToolSettings
+from .i18n import T
 
 PX_PER_PT = 96 / 72
 GAP = 14
@@ -44,7 +45,7 @@ CURSORS = {
 
 
 class PageItem(QGraphicsItem):
-    def __init__(self, view: "DocumentView", index: int, w: float, h: float):
+    def __init__(self, view: T('DocumentView'), index: int, w: float, h: float):
         super().__init__()
         self.view = view
         self.index = index
@@ -896,37 +897,37 @@ class DocumentView(QGraphicsView):
                 self.sel_annot = (idx, xref)
                 self.annot_selected.emit((idx, xref))
                 self.viewport().update()
-                menu.addAction("Proprietà…", lambda: self.request_annot_props.emit(idx, xref))
-                menu.addAction("Elimina annotazione", self.delete_selected)
-                menu.addAction("Copia testo del commento",
+                menu.addAction(T('Proprietà…'), lambda: self.request_annot_props.emit(idx, xref))
+                menu.addAction(T('Elimina annotazione'), self.delete_selected)
+                menu.addAction(T('Copia testo del commento'),
                                lambda: QApplication.clipboard().setText(a_content))
                 menu.addSeparator()
             if self.sel_text:
-                menu.addAction("Copia", self.copy_selection)
-                for name, label in (("highlight", "Evidenzia"), ("underline", "Sottolinea"),
-                                    ("strike", "Barra"), ("squiggly", "Sottolineatura ondulata")):
+                menu.addAction(T('Copia'), self.copy_selection)
+                for name, label in (("highlight", T('Evidenzia')), ("underline", T('Sottolinea')),
+                                    ("strike", T('Barra')), ("squiggly", T('Sottolineatura ondulata'))):
                     menu.addAction(label, lambda n=name: self.markup_selection(n))
-                menu.addAction("Contrassegna per redazione", self.redact_selection)
-                menu.addAction("Crea collegamento…", self.link_from_selection)
+                menu.addAction(T('Contrassegna per redazione'), self.redact_selection)
+                menu.addAction(T('Crea collegamento…'), self.link_from_selection)
                 menu.addSeparator()
             im = IM.image_at(page, pt) if self.tools.tool == "edit_object" else None
             if im is not None:
                 self.sel_image = (idx, im)
                 self.viewport().update()
-                menu.addAction("Sostituisci immagine…", self.replace_selected_image)
-                menu.addAction("Salva immagine come…", self.save_selected_image)
-                menu.addAction("Ruota a destra", lambda: self.rotate_selected_image(-90))
-                menu.addAction("Ruota a sinistra", lambda: self.rotate_selected_image(90))
-                menu.addAction("Elimina immagine", self.delete_selected)
+                menu.addAction(T('Sostituisci immagine…'), self.replace_selected_image)
+                menu.addAction(T('Salva immagine come…'), self.save_selected_image)
+                menu.addAction(T('Ruota a destra'), lambda: self.rotate_selected_image(-90))
+                menu.addAction(T('Ruota a sinistra'), lambda: self.rotate_selected_image(90))
+                menu.addAction(T('Elimina immagine'), self.delete_selected)
                 menu.addSeparator()
-            menu.addAction("Incolla", lambda: self.paste_at(idx, pt))
-            menu.addAction("Aggiungi nota qui", lambda: self._add_note(idx, page, pt))
-            menu.addAction("Seleziona tutto il testo della pagina", lambda: self.select_all_text(idx))
+            menu.addAction(T('Incolla'), lambda: self.paste_at(idx, pt))
+            menu.addAction(T('Aggiungi nota qui'), lambda: self._add_note(idx, page, pt))
+            menu.addAction(T('Seleziona tutto il testo della pagina'), lambda: self.select_all_text(idx))
             menu.addSeparator()
-            menu.addAction("Ruota pagina a destra", lambda: self.window().run_action("rotate_right_current", idx))
-            menu.addAction("Ruota pagina a sinistra", lambda: self.window().run_action("rotate_left_current", idx))
-            menu.addAction("Elimina pagina", lambda: self.window().run_action("delete_current", idx))
-            menu.addAction("Aggiungi segnalibro per questa pagina",
+            menu.addAction(T('Ruota pagina a destra'), lambda: self.window().run_action("rotate_right_current", idx))
+            menu.addAction(T('Ruota pagina a sinistra'), lambda: self.window().run_action("rotate_left_current", idx))
+            menu.addAction(T('Elimina pagina'), lambda: self.window().run_action("delete_current", idx))
+            menu.addAction(T('Aggiungi segnalibro per questa pagina'),
                            lambda: self.window().run_action("bookmark_here", idx))
         menu.exec(e.globalPos())
 
@@ -1103,20 +1104,20 @@ class DocumentView(QGraphicsView):
     def copy_selection(self) -> None:
         if self.sel_text:
             QApplication.clipboard().setText(self.sel_text)
-            self.status.emit("Testo copiato negli appunti")
+            self.status.emit(T('Testo copiato negli appunti'))
         elif self.sel_image:
             idx, im = self.sel_image
             data, _ = IM.image_bytes(self.model.doc, im.xref)
             img = QImage.fromData(data)
             QApplication.clipboard().setImage(img)
-            self.status.emit("Immagine copiata negli appunti")
+            self.status.emit(T('Immagine copiata negli appunti'))
 
     def markup_selection(self, kind: str) -> None:
         if not self._sel_quads:
             return
         idx, rects = self._sel_quads[0]
         st = self._style(kind)
-        with self.model.edit("Annotazione", [idx]):
+        with self.model.edit(T('Annotazione'), [idx]):
             A.add_markup(self.model.page(idx), kind, [r.quad for r in rects], st)
         self.clear_text_selection()
 
@@ -1125,11 +1126,11 @@ class DocumentView(QGraphicsView):
             return
         from .ops import security as SEC
         idx, rects = self._sel_quads[0]
-        with self.model.edit("Contrassegna redazione", [idx]):
+        with self.model.edit(T('Contrassegna redazione'), [idx]):
             for r in rects:
                 SEC.mark_area(self.model.page(idx), r)
         self.clear_text_selection()
-        self.status.emit("Area contrassegnata: usa «Applica redazioni» per eliminare il contenuto")
+        self.status.emit(T('Area contrassegnata: usa «Applica redazioni» per eliminare il contenuto'))
 
     def link_from_selection(self) -> None:
         if not self._sel_quads:
@@ -1150,7 +1151,7 @@ class DocumentView(QGraphicsView):
             page = self.model.page(idx)
             r = self._pdf_rect(page, QRectF(band["p0"], band["p1"]).normalized())
             if r.width > 2 and r.height > 2:
-                with self.model.edit("Annotazione", [idx]):
+                with self.model.edit(T('Annotazione'), [idx]):
                     A.add_markup(page, tool, [r.quad], self._style(tool))
         self._tool_done()
 
@@ -1194,7 +1195,7 @@ class DocumentView(QGraphicsView):
         new = self._pdf_rect(page, t["rect"])
         if t["target"] == "annot" and self.sel_annot:
             xref = self.sel_annot[1]
-            with self.model.edit("Sposta annotazione", [idx]):
+            with self.model.edit(T('Sposta annotazione'), [idx]):
                 page = self.model.page(idx)
                 a = A.annot_by_xref(page, xref)
                 if a is None:
@@ -1208,14 +1209,14 @@ class DocumentView(QGraphicsView):
             self.annot_selected.emit((idx, nx))
         elif t["target"] == "image" and self.sel_image:
             im = self.sel_image[1]
-            with self.model.edit("Sposta immagine", [idx]):
+            with self.model.edit(T('Sposta immagine'), [idx]):
                 IM.move_image(self.model.page(idx), im, new)
             self.sel_image = None
             self._reselect_image(idx, new)
         elif t["target"] == "block" and self.sel_block:
             b = self.sel_block[1]
             dx, dy = new.x0 - b.rect.x0, new.y0 - b.rect.y0
-            with self.model.edit("Sposta testo", [idx]):
+            with self.model.edit(T('Sposta testo'), [idx]):
                 page = self.model.page(idx)
                 TE.delete_block(page, b)
                 r = pymupdf.Rect(b.rect.x0 + dx - 1, b.rect.y0 + dy - 1, b.rect.x1 + dx + max(2, b.rect.width * 0.02),
@@ -1243,7 +1244,7 @@ class DocumentView(QGraphicsView):
             return
         p0 = self._pdf_pt(page, QPointF(0, 0))
         p1 = self._pdf_pt(page, QPointF(dx, dy))
-        with self.model.edit("Sposta annotazione", [idx]):
+        with self.model.edit(T('Sposta annotazione'), [idx]):
             page = self.model.page(idx)
             a = A.annot_by_xref(page, xref)
             nx = A.move_annot(page, a, p1.x - p0.x, p1.y - p0.y)
@@ -1253,7 +1254,7 @@ class DocumentView(QGraphicsView):
         try:
             if self.sel_annot:
                 idx, xref = self.sel_annot
-                with self.model.edit("Elimina annotazione", [idx]):
+                with self.model.edit(T('Elimina annotazione'), [idx]):
                     page = self.model.page(idx)
                     a = A.annot_by_xref(page, xref)
                     if a is not None:
@@ -1262,12 +1263,12 @@ class DocumentView(QGraphicsView):
                 self.annot_selected.emit(None)
             elif self.sel_image:
                 idx, im = self.sel_image
-                with self.model.edit("Elimina immagine", [idx]):
+                with self.model.edit(T('Elimina immagine'), [idx]):
                     IM.remove_image(self.model.page(idx), im)
                 self.sel_image = None
             elif self.sel_block:
                 idx, b = self.sel_block
-                with self.model.edit("Elimina testo", [idx]):
+                with self.model.edit(T('Elimina testo'), [idx]):
                     TE.delete_block(self.model.page(idx), b)
                 self.sel_block = None
         except Exception as ex:
@@ -1292,8 +1293,7 @@ class DocumentView(QGraphicsView):
             self.sel_image = (idx, im)
             r = self._vrect(page, im.rect)
             self.temp = {"kind": "move", "page": idx, "orig": r, "rect": r, "start": v, "target": "image"}
-            self.status.emit(f"Immagine {im.width}×{im.height} px · trascina per spostare, maniglie per "
-                             "ridimensionare, Canc per eliminare, tasto destro per altre opzioni")
+            self.status.emit(T('Immagine {}×{} px · trascina per spostare, maniglie per ridimensionare, Canc per eliminare, tasto destro per altre opzioni').format(im.width, im.height))
             return
         b = TE.block_at(self._blocks(idx), pt)
         if b is not None:
@@ -1301,7 +1301,7 @@ class DocumentView(QGraphicsView):
             self.sel_block = (idx, b)
             r = self._vrect(page, b.rect)
             self.temp = {"kind": "move", "page": idx, "orig": r, "rect": r, "start": v, "target": "block"}
-            self.status.emit("Blocco di testo · trascina per spostare, Canc per eliminare")
+            self.status.emit(T('Blocco di testo · trascina per spostare, Canc per eliminare'))
             return
         self.sel_image = None
         self.sel_block = None
@@ -1310,12 +1310,12 @@ class DocumentView(QGraphicsView):
         if not self.sel_image:
             return
         from PySide6.QtWidgets import QFileDialog
-        path, _ = QFileDialog.getOpenFileName(self, "Sostituisci immagine", "",
-                                              "Immagini (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)")
+        path, _ = QFileDialog.getOpenFileName(self, T('Sostituisci immagine'), "",
+                                              T('Immagini (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)'))
         if not path:
             return
         idx, im = self.sel_image
-        with self.model.edit("Sostituisci immagine", [idx]):
+        with self.model.edit(T('Sostituisci immagine'), [idx]):
             IM.replace_image(self.model.page(idx), im, path)
         self.sel_image = None
 
@@ -1325,7 +1325,7 @@ class DocumentView(QGraphicsView):
         from PySide6.QtWidgets import QFileDialog
         idx, im = self.sel_image
         data, ext = IM.image_bytes(self.model.doc, im.xref)
-        path, _ = QFileDialog.getSaveFileName(self, "Salva immagine", f"immagine.{ext}", f"Immagine (*.{ext})")
+        path, _ = QFileDialog.getSaveFileName(self, T('Salva immagine'), T('immagine.{}').format(ext), T('Immagine (*.{})').format(ext))
         if path:
             with open(path, "wb") as f:
                 f.write(data)
@@ -1334,7 +1334,7 @@ class DocumentView(QGraphicsView):
         if not self.sel_image:
             return
         idx, im = self.sel_image
-        with self.model.edit("Ruota immagine", [idx]):
+        with self.model.edit(T('Ruota immagine'), [idx]):
             IM.rotate_image(self.model.page(idx), im, angle)
         self.sel_image = None
 
@@ -1355,13 +1355,13 @@ class DocumentView(QGraphicsView):
             h = img.height() * 0.75
             k = min(1.0, page.rect.width * 0.8 / max(w, 1), page.rect.height * 0.8 / max(h, 1))
             r = pymupdf.Rect(pt.x, pt.y, pt.x + w * k, pt.y + h * k)
-            with self.model.edit("Incolla immagine", [idx]):
+            with self.model.edit(T('Incolla immagine'), [idx]):
                 IM.insert_image(self.model.page(idx), r, data=bytes(ba))
         elif md.hasText() and md.text().strip():
             paras = [TE.Para([TE.Run(line, self.tools.text_family, self.tools.text_size,
                                      color=self.tools.color_for("text"))]) for line in md.text().splitlines()]
             r = pymupdf.Rect(pt.x, pt.y, min(pt.x + 400, page.mediabox.x1), pt.y + 40)
-            with self.model.edit("Incolla testo", [idx]):
+            with self.model.edit(T('Incolla testo'), [idx]):
                 TE.insert_paras(self.model.page(idx), r, paras)
                 self.model.fonts_inserted = True
 
@@ -1440,12 +1440,12 @@ class DocumentView(QGraphicsView):
                 return
             p0 = self._pdf_pt(page, t["p0"])
             p1 = self._pdf_pt(page, t["p1"])
-            with self.model.edit("Disegno", [idx]):
+            with self.model.edit(T('Disegno'), [idx]):
                 page = self.model.page(idx)
                 if tool == "measure":
                     _, label = A.add_measure(page, p0, p1, self.tools.measure_scale, self.tools.measure_unit,
                                              self._style(tool))
-                    self.status.emit(f"Distanza: {label}")
+                    self.status.emit(T('Distanza: {}').format(label))
                 else:
                     A.add_shape(page, tool, [p0, p1], self._style(tool))
             self._tool_done()
@@ -1462,7 +1462,7 @@ class DocumentView(QGraphicsView):
             r_view = QRectF(t["p0"].x(), t["p0"].y(), dw, dh)
         rect = self._pdf_rect(page, r_view)
         if tool == "rect" or tool == "ellipse":
-            with self.model.edit("Disegno", [idx]):
+            with self.model.edit(T('Disegno'), [idx]):
                 A.add_shape(self.model.page(idx), tool, [rect.tl, rect.br], self._style(tool))
             self._tool_done()
         elif tool in ("freetext", "callout"):
@@ -1477,7 +1477,7 @@ class DocumentView(QGraphicsView):
                     a = pymupdf.Point(rect.x0 - 40, rect.y1 + 30)
                     b = pymupdf.Point(rect.x0, (rect.y0 + rect.y1) / 2)
                     callout = [a, b]
-                with self.model.edit("Casella di testo", [idx]):
+                with self.model.edit(T('Casella di testo'), [idx]):
                     A.add_freetext(self.model.page(idx), rect, text, self._style(tool), callout)
                 self._tool_done()
             self.editor = PlainEditor(self, idx, r_view, "", done, multiline=True,
@@ -1486,9 +1486,9 @@ class DocumentView(QGraphicsView):
             mw.create_link(idx, rect)
         elif tool == "redact":
             from .ops import security as SEC
-            with self.model.edit("Contrassegna redazione", [idx]):
+            with self.model.edit(T('Contrassegna redazione'), [idx]):
                 SEC.mark_area(self.model.page(idx), rect)
-            self.status.emit("Area contrassegnata: usa «Applica redazioni» per eliminare il contenuto")
+            self.status.emit(T('Area contrassegnata: usa «Applica redazioni» per eliminare il contenuto'))
         elif tool == "crop":
             mw.crop_with_rect(idx, rect)
         elif tool == "snapshot":
@@ -1511,7 +1511,7 @@ class DocumentView(QGraphicsView):
 
     def _place_stamp(self, idx: int, rect: pymupdf.Rect) -> None:
         t = self.tools
-        with self.model.edit("Timbro", [idx]):
+        with self.model.edit(T('Timbro'), [idx]):
             page = self.model.page(idx)
             if t.stamp_index >= 0:
                 A.add_stamp(page, rect, A.STAMPS[t.stamp_index][1], self._style("stamp"))
@@ -1524,7 +1524,7 @@ class DocumentView(QGraphicsView):
         pix = page.get_pixmap(dpi=200, clip=rect)
         img = QImage(pix.samples_mv, pix.width, pix.height, pix.stride, QImage.Format_RGB888).copy()
         QApplication.clipboard().setImage(img)
-        self.status.emit("Istantanea copiata negli appunti")
+        self.status.emit(T('Istantanea copiata negli appunti'))
 
     def _commit_ink(self) -> None:
         t = self.temp
@@ -1537,7 +1537,7 @@ class DocumentView(QGraphicsView):
         idx = t["page"]
         page = self.model.page(idx)
         pts = [[self._pdf_pt(page, q) for q in s] for s in strokes]
-        with self.model.edit("Disegno a mano", [idx]):
+        with self.model.edit(T('Disegno a mano'), [idx]):
             A.add_ink(self.model.page(idx), pts, self._style("ink"))
         self._tool_done()
         self.viewport().update()
@@ -1553,11 +1553,11 @@ class DocumentView(QGraphicsView):
         pts = [self._pdf_pt(page, q) for q in t["pts"]]
         tool = t["tool"]
         try:
-            with self.model.edit("Disegno", [idx]):
+            with self.model.edit(T('Disegno'), [idx]):
                 page = self.model.page(idx)
                 if tool == "area":
                     if len(pts) < 3:
-                        raise ValueError("Servono almeno 3 punti per misurare un'area")
+                        raise ValueError(T("Servono almeno 3 punti per misurare un'area"))
                     _, label = A.add_area_measure(page, pts, self.tools.measure_scale, self.tools.measure_unit,
                                                   self._style("area"))
                     self.status.emit(label)
@@ -1570,19 +1570,19 @@ class DocumentView(QGraphicsView):
 
     def _add_note(self, idx: int, page, pt) -> None:
         from PySide6.QtWidgets import QInputDialog
-        text, ok = QInputDialog.getMultiLineText(self, "Nuova nota", "Testo della nota:")
+        text, ok = QInputDialog.getMultiLineText(self, T('Nuova nota'), T('Testo della nota:'))
         if not ok:
             return
-        with self.model.edit("Nota", [idx]):
+        with self.model.edit(T('Nota'), [idx]):
             A.add_note(self.model.page(idx), pt, text, self.tools.note_icon, self._style("note"))
         self._tool_done()
 
     def _add_attachment(self, idx: int, page, pt) -> None:
         from PySide6.QtWidgets import QFileDialog
-        path, _ = QFileDialog.getOpenFileName(self, "Allega file alla pagina")
+        path, _ = QFileDialog.getOpenFileName(self, T('Allega file alla pagina'))
         if not path:
             return
-        with self.model.edit("Allegato", [idx]):
+        with self.model.edit(T('Allegato'), [idx]):
             A.add_file_attachment(self.model.page(idx), pt, path, self._style("note"))
         self._tool_done()
 
@@ -1590,7 +1590,7 @@ class DocumentView(QGraphicsView):
         a = A.annot_at(page, pt)
         if a is None:
             return
-        with self.model.edit("Elimina annotazione", [idx]):
+        with self.model.edit(T('Elimina annotazione'), [idx]):
             p = self.model.page(idx)
             a = A.annot_at(p, pt)
             if a is not None:
@@ -1622,9 +1622,9 @@ class DocumentView(QGraphicsView):
             target = l.get("page", -1)
             if target is not None and target >= 0:
                 self.go_to_page(target)
-            elif name in ("NextPage",):
+            elif name in (T('NextPage'),):
                 self.next_page()
-            elif name in ("PrevPage",):
+            elif name in (T('PrevPage'),):
                 self.prev_page()
             elif name == "FirstPage":
                 self.go_to_page(0)
@@ -1633,14 +1633,14 @@ class DocumentView(QGraphicsView):
             return True
         if kind == pymupdf.LINK_URI and l.get("uri"):
             uri = l["uri"]
-            if QMessageBox.question(self, "Apri collegamento",
-                                    f"Aprire questo indirizzo nel browser?\n\n{uri}") == QMessageBox.Yes:
+            if QMessageBox.question(self, T('Apri collegamento'),
+                                    T('Aprire questo indirizzo nel browser?\n\n{}').format(uri)) == QMessageBox.Yes:
                 from PySide6.QtCore import QUrl
                 from PySide6.QtGui import QDesktopServices
                 QDesktopServices.openUrl(QUrl(uri))
             return True
         if kind in (pymupdf.LINK_LAUNCH, pymupdf.LINK_GOTOR):
-            self.status.emit(f"Collegamento a file esterno non aperto per sicurezza: {l.get('file', '')}")
+            self.status.emit(T('Collegamento a file esterno non aperto per sicurezza: {}').format(l.get('file', '')))
             return True
         return False
 
@@ -1649,13 +1649,13 @@ class DocumentView(QGraphicsView):
         if w is None:
             return False
         if w.field_flags & pymupdf.PDF_FIELD_IS_READ_ONLY:
-            self.status.emit("Campo di sola lettura")
+            self.status.emit(T('Campo di sola lettura'))
             return True
         xref = w.xref
         ft = w.field_type
         try:
             if ft in (pymupdf.PDF_WIDGET_TYPE_CHECKBOX, pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON):
-                with self.model.edit("Compila modulo", [idx]):
+                with self.model.edit(T('Compila modulo'), [idx]):
                     F.toggle(self.model.page(idx), xref)
             elif ft == pymupdf.PDF_WIDGET_TYPE_TEXT:
                 from .editors import PlainEditor
@@ -1665,7 +1665,7 @@ class DocumentView(QGraphicsView):
 
                 def done(text, xref=xref):
                     if text != value:
-                        with self.model.edit("Compila modulo", [idx]):
+                        with self.model.edit(T('Compila modulo'), [idx]):
                             F.set_value(self.model.page(idx), xref, text)
                 self.editor = PlainEditor(self, idx, self._vrect(page, w.rect), value, done, multiline=multiline,
                                           font_pt=fs, max_len=w.text_maxlen or 0)
@@ -1680,7 +1680,7 @@ class DocumentView(QGraphicsView):
                     act.setData(val)
                 chosen = m.exec(QCursor.pos())
                 if chosen is not None:
-                    with self.model.edit("Compila modulo", [idx]):
+                    with self.model.edit(T('Compila modulo'), [idx]):
                         F.set_value(self.model.page(idx), xref, chosen.data())
             elif ft == pymupdf.PDF_WIDGET_TYPE_SIGNATURE:
                 self.request_sign_field.emit(w.field_name)
@@ -1690,4 +1690,4 @@ class DocumentView(QGraphicsView):
 
     # ------------------------------------------------------------ errori
     def _error(self, ex: Exception) -> None:
-        QMessageBox.warning(self, "Operazione non riuscita", str(ex) or type(ex).__name__)
+        QMessageBox.warning(self, T('Operazione non riuscita'), str(ex) or type(ex).__name__)

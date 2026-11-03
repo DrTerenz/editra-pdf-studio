@@ -13,11 +13,16 @@ if (-not $SkipTests) {
     New-Item -ItemType Directory $work | Out-Null
     & $py tests\make_sample.py "$work\prova.pdf"
     $env:QT_QPA_PLATFORM = "offscreen"
+    $env:EDITRA_LANG = "it"
     & $py tests\test_ops.py "$work\ops" "$work\prova.pdf" | Select-Object -Last 3
     if ($LASTEXITCODE -ne 0) { throw "Collaudo delle operazioni fallito" }
-    & $py tests\test_gui.py "$work\gui" "$work\prova.pdf" | Select-Object -Last 3
-    if ($LASTEXITCODE -ne 0) { throw "Collaudo dell'interfaccia fallito" }
+    foreach ($lang in "it", "en") {
+        $env:EDITRA_LANG = $lang
+        & $py tests\test_gui.py "$work\gui_$lang" "$work\prova.pdf" | Select-Object -Last 1
+        if ($LASTEXITCODE -ne 0) { throw "Collaudo dell'interfaccia fallito ($lang)" }
+    }
     Remove-Item Env:\QT_QPA_PLATFORM
+    Remove-Item Env:\EDITRA_LANG
 }
 
 & $py build\make_icon.py build\EditraPDFStudio.ico
@@ -30,7 +35,8 @@ if (-not $iscc) { throw "Inno Setup 6 non trovato (winget install JRSoftware.Inn
 & $iscc /Q build\installer.iss
 if ($LASTEXITCODE -ne 0) { throw "Compilazione dell'installer fallita" }
 
-$zip = "installer\EditraPDFStudio_portatile_1.0.0.zip"
+$version = (Select-String -Path editra\__init__.py -Pattern 'VERSION = "(.+)"').Matches[0].Groups[1].Value
+$zip = "installer\EditraPDFStudio_portable_$version.zip"
 if (Test-Path $zip) { Remove-Item $zip }
 Compress-Archive -Path dist\EditraPDFStudio -DestinationPath $zip -CompressionLevel Optimal
 Get-ChildItem installer | Select-Object Name, @{n = 'MB'; e = { [math]::Round($_.Length / 1MB, 1) } }

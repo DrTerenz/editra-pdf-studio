@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QColorDialog, QComboBox, QDoubleSpinBox, QFontCom
 
 from . import icons, theme
 from .ops import textedit as TE
+from .i18n import T
 
 PX_PER_PT = 96 / 72
 
@@ -239,7 +240,7 @@ class RichTextEditor(_InlineBase):
         if self.block is not None:
             if not self._changed(paras):
                 return
-            with model.edit("Modifica testo", [self.idx]):
+            with model.edit(T('Modifica testo'), [self.idx]):
                 warn = TE.replace_block(model.page(self.idx), self.block, paras)
                 model.fonts_inserted = True
         else:
@@ -249,7 +250,7 @@ class RichTextEditor(_InlineBase):
             w_pt = self.edit.width() / PX_PER_PT
             r = QRectF(self.rect_view.left(), self.rect_view.top(), max(w_pt, 20), self.rect_view.height())
             rect = self.view._pdf_rect(page, r)
-            with model.edit("Aggiungi testo", [self.idx]):
+            with model.edit(T('Aggiungi testo'), [self.idx]):
                 _, warn = TE.insert_paras(model.page(self.idx), rect, paras)
                 model.fonts_inserted = True
         if warn:
@@ -261,7 +262,7 @@ class RichTextEditor(_InlineBase):
             b = self.block
             self.block = None
             self.view.cancel_editor()
-            with model.edit("Elimina testo", [self.idx]):
+            with model.edit(T('Elimina testo'), [self.idx]):
                 TE.delete_block(model.page(self.idx), b)
         else:
             self.view.cancel_editor()
@@ -303,33 +304,33 @@ class _FormatBar(QFrame):
         self.size.valueChanged.connect(self._size)
         lay.addWidget(self.font)
         lay.addWidget(self.size)
-        self.b = self._btn("B", "Grassetto (Ctrl+B)", True, self._bold)
-        self.i = self._btn("I", "Corsivo (Ctrl+I)", True, self._italic)
-        self.u = self._btn("U", "Sottolineato (Ctrl+U)", True, self._under)
+        self.b = self._btn("B", T('Grassetto (Ctrl+B)'), True, self._bold)
+        self.i = self._btn("I", T('Corsivo (Ctrl+I)'), True, self._italic)
+        self.u = self._btn("U", T('Sottolineato (Ctrl+U)'), True, self._under)
         f = self.b.font(); f.setBold(True); self.b.setFont(f)
         f = self.i.font(); f.setItalic(True); self.i.setFont(f)
         f = self.u.font(); f.setUnderline(True); self.u.setFont(f)
         for w in (self.b, self.i, self.u):
             lay.addWidget(w)
         self.color = QToolButton()
-        self.color.setToolTip("Colore del testo")
+        self.color.setToolTip(T('Colore del testo'))
         self.color.clicked.connect(self._color)
         lay.addWidget(self.color)
         self.align = QComboBox()
-        self.align.addItems(["Sinistra", "Centro", "Destra", "Giustificato"])
+        self.align.addItems([T('Sinistra'), T('Centro'), T('Destra'), T('Giustificato')])
         self.align.currentIndexChanged.connect(lambda i: None if self._sync_lock else owner.set_align(i))
         lay.addWidget(self.align)
         ok = QToolButton()
         ok.setIcon(icons.icon("accept"))
-        ok.setToolTip("Conferma (Ctrl+Invio)")
+        ok.setToolTip(T('Conferma (Ctrl+Invio)'))
         ok.clicked.connect(lambda: owner.view.commit_editor())
         cancel = QToolButton()
         cancel.setIcon(icons.icon("cancel"))
-        cancel.setToolTip("Annulla (Esc)")
+        cancel.setToolTip(T('Annulla (Esc)'))
         cancel.clicked.connect(lambda: owner.view.cancel_editor())
         delete = QToolButton()
         delete.setIcon(icons.icon("delete"))
-        delete.setToolTip("Elimina questo blocco di testo")
+        delete.setToolTip(T('Elimina questo blocco di testo'))
         delete.clicked.connect(owner.delete_block)
         lay.addWidget(ok)
         lay.addWidget(cancel)
@@ -399,7 +400,7 @@ class _FormatBar(QFrame):
         self.owner.merge(fmt)
 
     def _color(self) -> None:
-        c = QColorDialog.getColor(getattr(self, "_cur_color", QColor("black")), self, "Colore del testo")
+        c = QColorDialog.getColor(getattr(self, "_cur_color", QColor("black")), self, T('Colore del testo'))
         if c.isValid():
             fmt = QTextCharFormat()
             fmt.setForeground(c)
@@ -483,7 +484,7 @@ class PlainEditor(_InlineBase):
             self.w.setTextCursor(c)
         else:
             self.w.selectAll()
-        view.status.emit("Invio per confermare" if not multiline else "Ctrl+Invio per confermare, Esc per annullare")
+        view.status.emit(T('Invio per confermare') if not multiline else T('Ctrl+Invio per confermare, Esc per annullare'))
 
     def text(self) -> str:
         return self.w.toPlainText() if self.multiline else self.w.text()

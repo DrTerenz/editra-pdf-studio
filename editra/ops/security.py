@@ -6,16 +6,17 @@ import re
 import pymupdf
 
 from .common import hex_to_rgb, search_page
+from ..i18n import T
 
 PERMISSIONS = [
-    ("Stampa", pymupdf.PDF_PERM_PRINT),
-    ("Stampa ad alta qualità", pymupdf.PDF_PERM_PRINT_HQ),
-    ("Modifica del contenuto", pymupdf.PDF_PERM_MODIFY),
-    ("Copia di testo e immagini", pymupdf.PDF_PERM_COPY),
-    ("Commenti e annotazioni", pymupdf.PDF_PERM_ANNOTATE),
-    ("Compilazione moduli", pymupdf.PDF_PERM_FORM),
-    ("Accessibilità", pymupdf.PDF_PERM_ACCESSIBILITY),
-    ("Assemblaggio (inserire, ruotare, eliminare pagine)", pymupdf.PDF_PERM_ASSEMBLE),
+    (T('Stampa'), pymupdf.PDF_PERM_PRINT),
+    (T('Stampa ad alta qualità'), pymupdf.PDF_PERM_PRINT_HQ),
+    (T('Modifica del contenuto'), pymupdf.PDF_PERM_MODIFY),
+    (T('Copia di testo e immagini'), pymupdf.PDF_PERM_COPY),
+    (T('Commenti e annotazioni'), pymupdf.PDF_PERM_ANNOTATE),
+    (T('Compilazione moduli'), pymupdf.PDF_PERM_FORM),
+    (T('Accessibilità'), pymupdf.PDF_PERM_ACCESSIBILITY),
+    (T('Assemblaggio (inserire, ruotare, eliminare pagine)'), pymupdf.PDF_PERM_ASSEMBLE),
 ]
 
 # modelli per la ricerca e redazione automatica
@@ -109,9 +110,9 @@ def sanitize(doc: pymupdf.Document, *, metadata=True, javascript=True, embedded_
               thumbnails=thumbnails, xml_metadata=xml_metadata)
 
 
-METADATA_FIELDS = [("title", "Titolo"), ("author", "Autore"), ("subject", "Oggetto"),
-                   ("keywords", "Parole chiave"), ("creator", "Applicazione di origine"),
-                   ("producer", "Produttore PDF")]
+METADATA_FIELDS = [("title", T('Titolo')), ("author", T('Autore')), ("subject", T('Oggetto')),
+                   ("keywords", T('Parole chiave')), ("creator", T('Applicazione di origine')),
+                   ("producer", T('Produttore PDF'))]
 
 
 def set_metadata(doc: pymupdf.Document, values: dict) -> None:
@@ -134,20 +135,20 @@ def document_info(doc: pymupdf.Document, path: str | None, size: int | None) -> 
     fonts = set()
     for p in doc:
         for f in p.get_fonts():
-            fonts.add(f"{f[3]} ({f[1]}{', incorporato' if f[1] not in ('n/a', '') else ''})")
+            fonts.add(f"{f[3]} ({f[1]}{T(', incorporato') if f[1] not in ('n/a', '') else ''})")
         if len(fonts) > 60:
             break
     rows = [
-        ("File", path or "—"), ("Dimensione", human_size(size) if size else "—"),
-        ("Pagine", str(doc.page_count)),
-        ("Formato pagina", f"{page.rect.width * 25.4 / 72:.0f} × {page.rect.height * 25.4 / 72:.0f} mm" if page else "—"),
-        ("Versione PDF", md.get("format", "—")), ("Titolo", md.get("title") or "—"),
-        ("Autore", md.get("author") or "—"), ("Oggetto", md.get("subject") or "—"),
-        ("Parole chiave", md.get("keywords") or "—"), ("Creato con", md.get("creator") or "—"),
-        ("Produttore", md.get("producer") or "—"), ("Creato il", d(md.get("creationDate"))),
-        ("Modificato il", d(md.get("modDate"))), ("Cifratura", md.get("encryption") or "Nessuna"),
-        ("Moduli", "Sì" if doc.is_form_pdf else "No"),
-        ("Firme digitali", "Sì" if (doc.get_sigflags() > 0) else "No"),
-        ("Allegati", str(doc.embfile_count())), ("Font", "\n".join(sorted(fonts)) or "—"),
+        (T('File'), path or "—"), (T('Dimensione'), human_size(size) if size else "—"),
+        (T('Pagine'), str(doc.page_count)),
+        (T('Formato pagina'), T('{:.0f} × {:.0f} mm').format(page.rect.width * 25.4 / 72, page.rect.height * 25.4 / 72) if page else "—"),
+        (T('Versione PDF'), md.get("format", "—")), (T('Titolo'), md.get("title") or "—"),
+        (T('Autore'), md.get("author") or "—"), (T('Oggetto'), md.get("subject") or "—"),
+        (T('Parole chiave'), md.get("keywords") or "—"), (T('Creato con'), md.get("creator") or "—"),
+        (T('Produttore'), md.get("producer") or "—"), (T('Creato il'), d(md.get("creationDate"))),
+        (T('Modificato il'), d(md.get("modDate"))), (T('Cifratura'), md.get("encryption") or T('Nessuna')),
+        (T('Moduli'), T('Sì') if doc.is_form_pdf else "No"),
+        (T('Firme digitali'), T('Sì') if (doc.get_sigflags() > 0) else "No"),
+        (T('Allegati'), str(doc.embfile_count())), (T('Font'), "\n".join(sorted(fonts)) or "—"),
     ]
     return rows

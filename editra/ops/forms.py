@@ -6,15 +6,16 @@ import json
 import pymupdf
 
 from .common import hex_to_rgb
+from ..i18n import T
 
 FIELD_TYPES = {
-    "text": (pymupdf.PDF_WIDGET_TYPE_TEXT, "Campo di testo"),
-    "checkbox": (pymupdf.PDF_WIDGET_TYPE_CHECKBOX, "Casella di controllo"),
-    "radio": (pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON, "Pulsante di scelta"),
-    "combobox": (pymupdf.PDF_WIDGET_TYPE_COMBOBOX, "Elenco a discesa"),
-    "listbox": (pymupdf.PDF_WIDGET_TYPE_LISTBOX, "Casella di riepilogo"),
-    "signature": (pymupdf.PDF_WIDGET_TYPE_SIGNATURE, "Campo firma"),
-    "button": (pymupdf.PDF_WIDGET_TYPE_BUTTON, "Pulsante"),
+    "text": (pymupdf.PDF_WIDGET_TYPE_TEXT, T('Campo di testo')),
+    "checkbox": (pymupdf.PDF_WIDGET_TYPE_CHECKBOX, T('Casella di controllo')),
+    "radio": (pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON, T('Pulsante di scelta')),
+    "combobox": (pymupdf.PDF_WIDGET_TYPE_COMBOBOX, T('Elenco a discesa')),
+    "listbox": (pymupdf.PDF_WIDGET_TYPE_LISTBOX, T('Casella di riepilogo')),
+    "signature": (pymupdf.PDF_WIDGET_TYPE_SIGNATURE, T('Campo firma')),
+    "button": (pymupdf.PDF_WIDGET_TYPE_BUTTON, T('Pulsante')),
 }
 
 
@@ -51,7 +52,7 @@ def create_field(page: pymupdf.Page, kind: str, rect: pymupdf.Rect, name: str, *
             w.text_maxlen = max_len
         w.field_value = value
     elif kind in ("combobox", "listbox"):
-        w.choice_values = choices or ["Opzione 1", "Opzione 2"]
+        w.choice_values = choices or [T('Opzione 1'), T('Opzione 2')]
         w.field_value = value or (w.choice_values[0] if kind == "combobox" else "")
         if kind == "combobox":
             flags |= pymupdf.PDF_CH_FIELD_IS_EDIT if False else 0
@@ -86,9 +87,9 @@ def set_value(page: pymupdf.Page, xref: int, value) -> None:
     if w is None:
         return
     if w.field_type == pymupdf.PDF_WIDGET_TYPE_CHECKBOX:
-        w.field_value = w.on_state() if value else "Off"
+        w.field_value = w.on_state() if value else T('Off')
     elif w.field_type == pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON:
-        w.field_value = w.on_state() if value else "Off"
+        w.field_value = w.on_state() if value else T('Off')
     else:
         _set_text(w, value)
         return
@@ -119,11 +120,11 @@ def toggle(page: pymupdf.Page, xref: int) -> None:
     if w is None:
         return
     on = w.on_state()
-    checked = w.field_value not in ("Off", False, "", None)
+    checked = w.field_value not in (T('Off'), False, "", None)
     if w.field_type == pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON:
         w.field_value = on
     else:
-        w.field_value = "Off" if checked else on
+        w.field_value = T('Off') if checked else on
     w.update()
 
 
@@ -145,7 +146,7 @@ def all_fields(doc: pymupdf.Document) -> list[dict]:
 def export_data(doc: pymupdf.Document, path: str) -> int:
     data = {}
     for f in all_fields(doc):
-        if f["type"] in ("Signature", "Button"):
+        if f["type"] in (T('Signature'), T('Button')):
             continue
         v = f["value"]
         data[f["name"]] = v if isinstance(v, (str, int, float, bool)) or v is None else str(v)
@@ -163,7 +164,7 @@ def import_data(doc: pymupdf.Document, path: str) -> int:
             if w.field_name in data:
                 v = data[w.field_name]
                 if w.field_type in (pymupdf.PDF_WIDGET_TYPE_CHECKBOX, pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON):
-                    w.field_value = v if isinstance(v, str) else (w.on_state() if v else "Off")
+                    w.field_value = v if isinstance(v, str) else (w.on_state() if v else T('Off'))
                     w.update()
                 else:
                     _set_text(w, v)
@@ -175,7 +176,7 @@ def reset_form(doc: pymupdf.Document) -> None:
     for page in doc:
         for w in page.widgets():
             if w.field_type in (pymupdf.PDF_WIDGET_TYPE_CHECKBOX, pymupdf.PDF_WIDGET_TYPE_RADIOBUTTON):
-                w.field_value = "Off"
+                w.field_value = T('Off')
                 w.update()
             elif w.field_type in (pymupdf.PDF_WIDGET_TYPE_SIGNATURE, pymupdf.PDF_WIDGET_TYPE_BUTTON):
                 continue
@@ -207,7 +208,7 @@ def auto_detect_fields(doc: pymupdf.Document, pages=None) -> int:
         for r in cands:
             if any(r.intersects(e) for e in existing):
                 continue
-            create_field(page, "text", r, unique_name(doc, f"campo_p{pno + 1}"), border_color="")
+            create_field(page, "text", r, unique_name(doc, T('campo_p{}').format(pno + 1)), border_color="")
             existing.append(r)
             n += 1
     return n

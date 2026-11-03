@@ -8,6 +8,7 @@ from PySide6.QtPrintSupport import QPrintDialog, QPrinter, QPrintPreviewDialog
 from PySide6.QtWidgets import QApplication, QCheckBox, QMessageBox, QProgressDialog
 
 from .ops.common import parse_ranges
+from .i18n import T
 
 
 def _pages_to_print(printer: QPrinter, total: int, current: int) -> list[int]:
@@ -30,7 +31,7 @@ def render_to_printer(printer: QPrinter, doc: pymupdf.Document, pages: list[int]
     dpi = min(printer.resolution(), max_dpi)
     prog = None
     if parent is not None and len(pages) > 3:
-        prog = QProgressDialog("Stampa in corso…", "Annulla", 0, len(pages), parent)
+        prog = QProgressDialog(T('Stampa in corso…'), T('Annulla'), 0, len(pages), parent)
         prog.setWindowModality(Qt.WindowModal)
         prog.setMinimumDuration(300)
     try:
@@ -78,17 +79,17 @@ def render_to_printer(printer: QPrinter, doc: pymupdf.Document, pages: list[int]
 def print_document(parent, model, current: int) -> None:
     doc = model.doc
     if not doc.permissions & pymupdf.PDF_PERM_PRINT:
-        QMessageBox.warning(parent, "Stampa", "L'autore del documento non consente la stampa.")
+        QMessageBox.warning(parent, T('Stampa'), T("L'autore del documento non consente la stampa."))
         return
     printer = QPrinter(QPrinter.HighResolution)
     printer.setDocName(model.title)
     printer.setFromTo(1, doc.page_count)
     dlg = QPrintDialog(printer, parent)
-    dlg.setWindowTitle(f"Stampa – {model.title}")
+    dlg.setWindowTitle(T('Stampa – {}').format(model.title))
     dlg.setOption(QPrintDialog.PrintCurrentPage, True)
     dlg.setOption(QPrintDialog.PrintPageRange, True)
     dlg.setMinMax(1, doc.page_count)
-    annots = QCheckBox("Stampa commenti e annotazioni")
+    annots = QCheckBox(T('Stampa commenti e annotazioni'))
     annots.setChecked(True)
     dlg.setOptionTabs([])
     if dlg.exec() != QPrintDialog.Accepted:
@@ -102,7 +103,7 @@ def print_preview(parent, model, current: int) -> None:
     printer = QPrinter(QPrinter.HighResolution)
     printer.setDocName(model.title)
     prev = QPrintPreviewDialog(printer, parent)
-    prev.setWindowTitle(f"Anteprima di stampa – {model.title}")
+    prev.setWindowTitle(T('Anteprima di stampa – {}').format(model.title))
     prev.resize(1000, 760)
 
     def paint(p: QPrinter):

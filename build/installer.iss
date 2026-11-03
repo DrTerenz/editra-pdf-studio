@@ -2,7 +2,7 @@
 ; Compilazione: ISCC.exe build\installer.iss  (dopo aver creato dist\EditraPDFStudio con PyInstaller)
 
 #define AppName "Editra PDF Studio"
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 #define AppExe "EditraPDFStudio.exe"
 #define ProgId "EditraPDFStudio.Documento"
 
@@ -33,15 +33,37 @@ MinVersion=10.0
 CloseApplications=yes
 ChangesAssociations=yes
 VersionInfoVersion={#AppVersion}
-VersionInfoDescription={#AppName} - installazione
+VersionInfoDescription={#AppName} setup
+ShowLanguageDialog=auto
 
 [Languages]
+Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
 
+[CustomMessages]
+en.Shortcuts=Shortcuts:
+it.Shortcuts=Collegamenti:
+en.DesktopIcon=Create a desktop shortcut
+it.DesktopIcon=Crea un collegamento sul desktop
+en.Associations=File associations:
+it.Associations=Associazioni:
+en.AssocPdf=Open PDF files with {#AppName}
+it.AssocPdf=Apri i file PDF con {#AppName}
+en.AssocP7m=Open signed .p7m files with {#AppName}
+it.AssocP7m=Apri i file firmati .p7m con {#AppName}
+en.DocPdf=PDF document
+it.DocPdf=Documento PDF
+en.DocP7m=Digitally signed document
+it.DocP7m=Documento firmato digitalmente
+en.AppDescription=PDF reader and editor
+it.AppDescription=Lettore ed editor PDF
+en.Launch=Launch {#AppName}
+it.Launch=Avvia {#AppName}
+
 [Tasks]
-Name: "desktopicon"; Description: "Crea un collegamento sul desktop"; GroupDescription: "Collegamenti:"
-Name: "assocpdf"; Description: "Apri i file PDF con {#AppName}"; GroupDescription: "Associazioni:"
-Name: "assocp7m"; Description: "Apri i file firmati .p7m con {#AppName}"; GroupDescription: "Associazioni:"
+Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Shortcuts}"
+Name: "assocpdf"; Description: "{cm:AssocPdf}"; GroupDescription: "{cm:Associations}"
+Name: "assocp7m"; Description: "{cm:AssocP7m}"; GroupDescription: "{cm:Associations}"
 
 [Files]
 Source: "..\dist\EditraPDFStudio\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -52,10 +74,10 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 
 [Registry]
 ; tipo di documento dell'app
-Root: HKA; Subkey: "Software\Classes\{#ProgId}"; ValueType: string; ValueData: "Documento PDF"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\{#ProgId}"; ValueType: string; ValueData: "{cm:DocPdf}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\{#ProgId}\DefaultIcon"; ValueType: string; ValueData: """{app}\{#AppExe}"",0"
 Root: HKA; Subkey: "Software\Classes\{#ProgId}\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
-Root: HKA; Subkey: "Software\Classes\{#ProgId}.p7m"; ValueType: string; ValueData: "Documento firmato digitalmente"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\{#ProgId}.p7m"; ValueType: string; ValueData: "{cm:DocP7m}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\{#ProgId}.p7m\DefaultIcon"; ValueType: string; ValueData: """{app}\{#AppExe}"",0"
 Root: HKA; Subkey: "Software\Classes\{#ProgId}.p7m\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
 Root: HKA; Subkey: "Software\Editra"; Flags: uninsdeletekeyifempty
@@ -66,7 +88,7 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; Val
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".p7m"; ValueData: ""
 Root: HKA; Subkey: "Software\Classes\Applications\{#AppExe}\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""
 Root: HKA; Subkey: "Software\Editra\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Editra\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Lettore ed editor PDF"
+Root: HKA; Subkey: "Software\Editra\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "{cm:AppDescription}"
 Root: HKA; Subkey: "Software\Editra\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "{#ProgId}"
 Root: HKA; Subkey: "Software\Editra\Capabilities\FileAssociations"; ValueType: string; ValueName: ".p7m"; ValueData: "{#ProgId}.p7m"
 Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#AppName}"; ValueData: "Software\Editra\Capabilities"; Flags: uninsdeletevalue
@@ -74,11 +96,12 @@ Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueNa
 Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueData: "{#ProgId}"; Tasks: assocpdf; Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\.p7m"; ValueType: string; ValueData: "{#ProgId}.p7m"; Tasks: assocp7m; Flags: uninsdeletevalue
 
+[INI]
+; al primo avvio il programma usa la lingua scelta per l'installazione (poi si cambia dalle Impostazioni)
+Filename: "{userappdata}\EditraPDFStudio\impostazioni.ini"; Section: "General"; Key: "language"; String: "{language}"; Flags: createkeyifdoesntexist
+
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Avvia {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-
-
-

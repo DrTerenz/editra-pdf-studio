@@ -2,5 +2,5 @@
 
 APP_NAME = "Editra PDF Studio"
 APP_ID = "EditraPDFStudio"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 ORG = "Editra"

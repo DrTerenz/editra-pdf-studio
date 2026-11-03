@@ -8,31 +8,32 @@ from dataclasses import dataclass
 import pymupdf
 
 from .common import hex_to_rgb, rgb_to_hex
+from ..i18n import T
 
 TYPE_NAMES = {
-    pymupdf.PDF_ANNOT_TEXT: "Nota", pymupdf.PDF_ANNOT_FREE_TEXT: "Casella di testo",
-    pymupdf.PDF_ANNOT_LINE: "Linea", pymupdf.PDF_ANNOT_SQUARE: "Rettangolo",
-    pymupdf.PDF_ANNOT_CIRCLE: "Ellisse", pymupdf.PDF_ANNOT_POLYGON: "Poligono",
-    pymupdf.PDF_ANNOT_POLY_LINE: "Spezzata", pymupdf.PDF_ANNOT_HIGHLIGHT: "Evidenziazione",
-    pymupdf.PDF_ANNOT_UNDERLINE: "Sottolineatura", pymupdf.PDF_ANNOT_SQUIGGLY: "Ondulata",
-    pymupdf.PDF_ANNOT_STRIKE_OUT: "Barrato", pymupdf.PDF_ANNOT_STAMP: "Timbro",
-    pymupdf.PDF_ANNOT_CARET: "Inserimento", pymupdf.PDF_ANNOT_INK: "Disegno a mano",
-    pymupdf.PDF_ANNOT_FILE_ATTACHMENT: "Allegato", pymupdf.PDF_ANNOT_REDACT: "Redazione",
-    pymupdf.PDF_ANNOT_LINK: "Collegamento",
+    pymupdf.PDF_ANNOT_TEXT: T('Nota'), pymupdf.PDF_ANNOT_FREE_TEXT: T('Casella di testo'),
+    pymupdf.PDF_ANNOT_LINE: T('Linea'), pymupdf.PDF_ANNOT_SQUARE: T('Rettangolo'),
+    pymupdf.PDF_ANNOT_CIRCLE: T('Ellisse'), pymupdf.PDF_ANNOT_POLYGON: T('Poligono'),
+    pymupdf.PDF_ANNOT_POLY_LINE: T('Spezzata'), pymupdf.PDF_ANNOT_HIGHLIGHT: T('Evidenziazione'),
+    pymupdf.PDF_ANNOT_UNDERLINE: T('Sottolineatura'), pymupdf.PDF_ANNOT_SQUIGGLY: T('Ondulata'),
+    pymupdf.PDF_ANNOT_STRIKE_OUT: T('Barrato'), pymupdf.PDF_ANNOT_STAMP: T('Timbro'),
+    pymupdf.PDF_ANNOT_CARET: T('Inserimento'), pymupdf.PDF_ANNOT_INK: T('Disegno a mano'),
+    pymupdf.PDF_ANNOT_FILE_ATTACHMENT: T('Allegato'), pymupdf.PDF_ANNOT_REDACT: T('Redazione'),
+    pymupdf.PDF_ANNOT_LINK: T('Collegamento'),
 }
 
 STAMPS = [
-    ("Approvato", pymupdf.STAMP_Approved), ("Non approvato", pymupdf.STAMP_NotApproved),
-    ("Bozza", pymupdf.STAMP_Draft), ("Finale", pymupdf.STAMP_Final),
-    ("Riservato", pymupdf.STAMP_Confidential), ("Per commenti", pymupdf.STAMP_ForComment),
-    ("Così com'è", pymupdf.STAMP_AsIs), ("Scaduto", pymupdf.STAMP_Expired),
-    ("Sperimentale", pymupdf.STAMP_Experimental), ("Dipartimentale", pymupdf.STAMP_Departmental),
-    ("Pubblico", pymupdf.STAMP_ForPublicRelease), ("Non pubblico", pymupdf.STAMP_NotForPublicRelease),
-    ("Venduto", pymupdf.STAMP_Sold), ("Top secret", pymupdf.STAMP_TopSecret),
+    (T('Approvato'), pymupdf.STAMP_Approved), (T('Non approvato'), pymupdf.STAMP_NotApproved),
+    (T('Bozza'), pymupdf.STAMP_Draft), (T('Finale'), pymupdf.STAMP_Final),
+    (T('Riservato'), pymupdf.STAMP_Confidential), (T('Per commenti'), pymupdf.STAMP_ForComment),
+    (T("Così com'è"), pymupdf.STAMP_AsIs), (T('Scaduto'), pymupdf.STAMP_Expired),
+    (T('Sperimentale'), pymupdf.STAMP_Experimental), (T('Dipartimentale'), pymupdf.STAMP_Departmental),
+    (T('Pubblico'), pymupdf.STAMP_ForPublicRelease), (T('Non pubblico'), pymupdf.STAMP_NotForPublicRelease),
+    (T('Venduto'), pymupdf.STAMP_Sold), (T('Top secret'), pymupdf.STAMP_TopSecret),
 ]
 
-NOTE_ICONS = [("Commento", "Comment"), ("Nota", "Note"), ("Chiave", "Key"), ("Aiuto", "Help"),
-              ("Paragrafo", "Paragraph"), ("Nuovo paragrafo", "NewParagraph"), ("Inserisci", "Insert")]
+NOTE_ICONS = [(T('Commento'), T('Comment')), (T('Nota'), T('Note')), (T('Chiave'), T('Key')), (T('Aiuto'), T('Help')),
+              (T('Paragrafo'), T('Paragraph')), (T('Nuovo paragrafo'), T('NewParagraph')), (T('Inserisci'), T('Insert'))]
 
 # tipi i cui punti vanno ricreati per spostarli
 _VERTEX_TYPES = (pymupdf.PDF_ANNOT_LINE, pymupdf.PDF_ANNOT_POLYGON, pymupdf.PDF_ANNOT_POLY_LINE, pymupdf.PDF_ANNOT_INK)
@@ -187,12 +188,12 @@ def add_measure(page: pymupdf.Page, p1: pymupdf.Point, p2: pymupdf.Point, scale:
     label = _format_measure(value, unit)
     a = page.add_line_annot(p1, p2)
     a.set_line_ends(pymupdf.PDF_ANNOT_LE_OPEN_ARROW, pymupdf.PDF_ANNOT_LE_OPEN_ARROW)
-    _finish(a, st, content=f"Distanza: {label}")
+    _finish(a, st, content=T('Distanza: {}').format(label))
     mid = pymupdf.Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
     r = pymupdf.Rect(mid.x - 40, mid.y - 16, mid.x + 40, mid.y - 2)
     t = page.add_freetext_annot(r, label, fontsize=9, text_color=hex_to_rgb(st.color or "#000"),
                                 fill_color=(1, 1, 1), align=1, rotate=page.rotation)
-    t.set_info(title=st.author or "", content=f"Distanza: {label}")
+    t.set_info(title=st.author or "", content=T('Distanza: {}').format(label))
     t.update()
     return a, label
 
@@ -204,13 +205,16 @@ def measure_area(points: list[pymupdf.Point], scale: float, unit: str) -> str:
         area += x1 * y2 - x2 * y1
     area = abs(area) / 2
     per = sum(math.hypot(x2 - x1, y2 - y1) for (x1, y1), (x2, y2) in zip(pts_mm, pts_mm[1:] + pts_mm[:1]))
-    return f"Area: {_format_measure(area, unit, 2)} · Perimetro: {_format_measure(per, unit)}"
+    return T('Area: {} · Perimetro: {}').format(_format_measure(area, unit, 2), _format_measure(per, unit))
 
 
 def _format_measure(value_mm_units: float, unit: str, power: int = 1) -> str:
     factor = {"mm": 1, "cm": 10, "m": 1000, "in": 25.4, "pt": 25.4 / 72}.get(unit, 1) ** power
     v = value_mm_units / factor
     suffix = unit + ("²" if power == 2 else "")
+    from ..i18n import LANG
+    if LANG == "en":
+        return f"{v:,.2f} {suffix}"
     return f"{v:,.2f} {suffix}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
@@ -390,14 +394,13 @@ def comments_summary_html(doc: pymupdf.Document, title: str) -> str:
         if d["type"] == pymupdf.PDF_ANNOT_REDACT:
             continue
         text = d.get("content") or d.get("marked_text") or ""
-        rows.append(f"<tr><td>{d['page'] + 1}</td><td>{html.escape(d['type_name'])}</td>"
-                    f"<td>{html.escape(d['author'])}</td><td>{html.escape(_pdf_date(d['modified']))}</td>"
-                    f"<td>{html.escape(text)}</td></tr>")
-    return (f"<html><head><meta charset='utf-8'><title>Commenti - {html.escape(title)}</title>"
+        rows.append(T('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>').format(d['page'] + 1, html.escape(d['type_name']), html.escape(d['author']), html.escape(_pdf_date(d['modified'])), html.escape(text)))
+    return (f"<html><head><meta charset='utf-8'><title>{T('Commenti')} - {html.escape(title)}</title>"
             "<style>body{font-family:Segoe UI,Arial;margin:30px}table{border-collapse:collapse;width:100%}"
             "td,th{border:1px solid #ccc;padding:6px;text-align:left;vertical-align:top}th{background:#f0ecf8}</style>"
-            f"</head><body><h1>Riepilogo commenti</h1><p>{html.escape(title)}</p>"
-            "<table><tr><th>Pagina</th><th>Tipo</th><th>Autore</th><th>Data</th><th>Testo</th></tr>"
+            f"</head><body><h1>{T('Riepilogo commenti')}</h1><p>{html.escape(title)}</p>"
+            f"<table><tr><th>{T('Pagina')}</th><th>{T('Tipo')}</th><th>{T('Autore')}</th><th>{T('Data')}</th>"
+            f"<th>{T('Testo')}</th></tr>"
             + "".join(rows) + "</table></body></html>")
 
 

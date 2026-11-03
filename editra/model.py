@@ -9,6 +9,7 @@ from pathlib import Path
 import pymupdf
 from PySide6.QtCore import QObject, Signal
 
+from .i18n import T
 from .ops.common import DICT_FLAGS, WORD_FLAGS
 
 MAX_UNDO = 30
@@ -314,7 +315,7 @@ class PdfModel(QObject):
     def save(self, path: str | None = None) -> str:
         path = path or self.path
         if not path:
-            raise ValueError("Percorso di salvataggio mancante")
+            raise ValueError(T("Percorso di salvataggio mancante"))
         if self.workpath and self.encryption is None:
             data = self._snapshot()
         else:

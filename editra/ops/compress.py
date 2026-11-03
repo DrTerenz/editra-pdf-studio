@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pymupdf
+from ..i18n import T
 
 PRESETS = {
     "Alta qualità (stampa)": dict(dpi_threshold=250, dpi_target=200, quality=85),
@@ -36,25 +37,25 @@ def compress(data: bytes, opt: CompressOptions, password: str | None = None, pro
         doc.authenticate(password)
     step = lambda m: progress(m) if progress else None
     if opt.remove_annotations:
-        step("Rimozione annotazioni")
+        step(T('Rimozione annotazioni'))
         for page in doc:
             for a in list(page.annots()):
                 page.delete_annot(a)
     if opt.flatten_forms:
-        step("Appiattimento moduli")
+        step(T('Appiattimento moduli'))
         try:
             doc.bake(annots=False, widgets=True)
         except Exception:
             pass
     if opt.images:
-        step("Ricompressione immagini")
+        step(T('Ricompressione immagini'))
         try:
             doc.rewrite_images(dpi_threshold=opt.dpi_threshold, dpi_target=opt.dpi_target,
                                quality=opt.quality, set_to_gray=opt.grayscale)
         except Exception:
             pass
     if opt.subset_fonts:
-        step("Riduzione dei font")
+        step(T('Riduzione dei font'))
         try:
             doc.subset_fonts()
         except Exception:
@@ -63,7 +64,7 @@ def compress(data: bytes, opt: CompressOptions, password: str | None = None, pro
         for name in list(doc.embfile_names()):
             doc.embfile_del(name)
     if opt.remove_metadata or opt.remove_thumbnails:
-        step("Pulizia")
+        step(T('Pulizia'))
         try:
             doc.scrub(attached_files=False, clean_pages=False, embedded_files=False, hidden_text=False,
                       javascript=False, metadata=opt.remove_metadata, redactions=False, redact_images=0,
@@ -71,7 +72,7 @@ def compress(data: bytes, opt: CompressOptions, password: str | None = None, pro
                       thumbnails=opt.remove_thumbnails, xml_metadata=opt.remove_metadata)
         except Exception:
             pass
-    step("Scrittura")
+    step(T('Scrittura'))
     out = doc.tobytes(garbage=4, deflate=True, deflate_images=True, deflate_fonts=True, clean=True,
                       use_objstms=1 if opt.object_streams else 0)
     doc.close()

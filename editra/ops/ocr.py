@@ -10,6 +10,7 @@ import asyncio
 import os
 
 import pymupdf
+from ..i18n import T
 
 
 def available() -> bool:
@@ -42,7 +43,7 @@ async def _recognize(png: bytes, lang: str | None):
     bmp = await dec.get_software_bitmap_async()
     eng = OcrEngine.try_create_from_language(Language(lang)) if lang else OcrEngine.try_create_from_user_profile_languages()
     if eng is None:
-        raise RuntimeError(f"Lingua OCR non disponibile: {lang}")
+        raise RuntimeError(T('Lingua OCR non disponibile: {}').format(lang))
     res = await eng.recognize_async(bmp)
     out = []
     for line in res.lines:
@@ -82,7 +83,7 @@ def ocr_page(page: pymupdf.Page, lang: str | None = None, dpi: int = 300) -> int
     if not words:
         return 0
     ff = _font_file()
-    fontname = "OcrF"
+    fontname = T('OcrF')
     if ff:
         page.insert_font(fontname=fontname, fontfile=ff)
         font = pymupdf.Font(fontfile=ff)

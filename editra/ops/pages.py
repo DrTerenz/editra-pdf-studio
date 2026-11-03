@@ -7,6 +7,7 @@ from pathlib import Path
 import pymupdf
 
 from .common import PAPER_SIZES, parse_ranges
+from ..i18n import T
 
 
 def open_any(path: str, password: str | None = None) -> pymupdf.Document:
@@ -20,7 +21,7 @@ def open_any(path: str, password: str | None = None) -> pymupdf.Document:
         src.close()
     if d.needs_pass:
         if not password or not d.authenticate(password):
-            raise PermissionError(f"Serve la password per aprire {os.path.basename(path)}")
+            raise PermissionError(T('Serve la password per aprire {}').format(os.path.basename(path)))
     return d
 
 
@@ -86,7 +87,7 @@ def insert_blank(doc: pymupdf.Document, at: int, count: int = 1, size: tuple[flo
 
 def delete_pages(doc: pymupdf.Document, pages: list[int]) -> None:
     if len(set(pages)) >= doc.page_count:
-        raise ValueError("Non si possono eliminare tutte le pagine del documento")
+        raise ValueError(T('Non si possono eliminare tutte le pagine del documento'))
     doc.delete_pages(sorted(set(pages)))
 
 
@@ -131,7 +132,7 @@ def replace_pages(doc: pymupdf.Document, pages: list[int], path: str, src_range:
     src = open_any(path, password)
     src_pages = parse_ranges(src_range, src.page_count)
     if len(src_pages) < len(pages):
-        raise ValueError(f"Il file sorgente ha solo {len(src_pages)} pagine nell'intervallo scelto, ne servono {len(pages)}")
+        raise ValueError(T("Il file sorgente ha solo {} pagine nell'intervallo scelto, ne servono {}").format(len(src_pages), len(pages)))
     for target, sp in zip(sorted(pages, reverse=True), list(reversed(src_pages[:len(pages)]))):
         doc.insert_pdf(src, from_page=sp, to_page=sp, start_at=target)
         doc.delete_page(target + 1)
@@ -150,19 +151,19 @@ def split_document(doc: pymupdf.Document, mode: str, value, out_dir: str, base: 
     if mode == "every":
         k = max(1, int(value))
         for i, s in enumerate(range(0, n, k), 1):
-            groups.append((f"{base}_parte{i}", list(range(s, min(n, s + k)))))
+            groups.append((T('{}_parte{}').format(base, i), list(range(s, min(n, s + k)))))
     elif mode == "ranges":
         for i, part in enumerate([p for p in str(value).split(";") if p.strip()], 1):
-            groups.append((f"{base}_parte{i}", parse_ranges(part, n)))
+            groups.append((T('{}_parte{}').format(base, i), parse_ranges(part, n)))
     elif mode == "bookmarks":
         toc = [t for t in doc.get_toc() if t[0] == 1 and t[2] > 0]
         if not toc:
-            raise ValueError("Il documento non ha segnalibri di primo livello")
+            raise ValueError(T('Il documento non ha segnalibri di primo livello'))
         starts = [t[2] - 1 for t in toc]
         for i, (t, s) in enumerate(zip(toc, starts)):
             e = starts[i + 1] if i + 1 < len(starts) else n
             if e > s:
-                safe = "".join(c for c in t[1] if c not in '\\/:*?"<>|').strip()[:60] or f"parte{i + 1}"
+                safe = "".join(c for c in t[1] if c not in '\\/:*?"<>|').strip()[:60] or T('parte{}').format(i + 1)
                 groups.append((f"{base}_{i + 1:02d}_{safe}", list(range(s, e))))
     elif mode == "size":
         limit = float(value) * 1024 * 1024
@@ -172,13 +173,13 @@ def split_document(doc: pymupdf.Document, mode: str, value, out_dir: str, base: 
             trial = cur + [p]
             size = len(extract_pages(doc, trial).tobytes(garbage=3, deflate=True))
             if size > limit and cur:
-                groups.append((f"{base}_parte{idx}", cur))
+                groups.append((T('{}_parte{}').format(base, idx), cur))
                 idx += 1
                 cur = [p]
             else:
                 cur = trial
         if cur:
-            groups.append((f"{base}_parte{idx}", cur))
+            groups.append((T('{}_parte{}').format(base, idx), cur))
     else:
         raise ValueError(mode)
     paths = []
@@ -206,7 +207,7 @@ def crop_pages(doc: pymupdf.Document, pages: list[int], margins: tuple[float, fl
             cur = page.cropbox
             r = pymupdf.Rect(cur.x0 + l, cur.y0 + t, cur.x1 - r_, cur.y1 - b)
         if r.is_empty or r.width < 10 or r.height < 10:
-            raise ValueError("Il ritaglio lascerebbe una pagina vuota")
+            raise ValueError(T('Il ritaglio lascerebbe una pagina vuota'))
         page.set_cropbox(r)
 
 

@@ -49,7 +49,10 @@ def fake_ask(parent, title, fields, intro="", ok_text="OK", width=460):
             continue
         else:
             vals[key] = default
-    vals.update(answers.get(title, {}))
+    # le risposte sono indicate con il titolo italiano anche quando l'interfaccia è in inglese
+    from editra.lang.en import STRINGS
+    italian = {v: k for k, v in STRINGS.items()}
+    vals.update(answers.get(italian.get(title, title), answers.get(title, {})))
     return vals
 
 

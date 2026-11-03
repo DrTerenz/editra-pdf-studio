@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import pymupdf
 
 from .common import WORD_FLAGS
+from ..i18n import T
 
 
 @dataclass
@@ -54,13 +55,13 @@ def annotate(a: pymupdf.Document, b: pymupdf.Document, diffs: list[PageDiff]) ->
             p = a[d.page_a]
             h = p.add_highlight_annot([r for r, _ in d.removed])
             h.set_colors(stroke=(1, 0.45, 0.45))
-            h.set_info(title="Confronto", content="Testo eliminato o modificato")
+            h.set_info(title=T('Confronto'), content=T('Testo eliminato o modificato'))
             h.update()
         if d.page_b is not None and d.added:
             p = b[d.page_b]
             h = p.add_highlight_annot([r for r, _ in d.added])
             h.set_colors(stroke=(0.45, 0.9, 0.45))
-            h.set_info(title="Confronto", content="Testo aggiunto o modificato")
+            h.set_info(title=T('Confronto'), content=T('Testo aggiunto o modificato'))
             h.update()
 
 
@@ -72,11 +73,9 @@ def report_html(diffs: list[PageDiff], name_a: str, name_b: str) -> str:
         pg = (d.page_a if d.page_a is not None else d.page_b) + 1
         for kind, ta, tb in d.ops:
             color = {"Modificato": "#fff3cd", "Eliminato": "#fde2e2", "Aggiunto": "#e2f6e2"}[kind]
-            rows.append(f"<tr style='background:{color}'><td>{pg}</td><td>{kind}</td>"
-                        f"<td>{html.escape(ta)}</td><td>{html.escape(tb)}</td></tr>")
-    head = (f"<h2>Confronto documenti</h2><p><b>A:</b> {html.escape(name_a)}<br><b>B:</b> {html.escape(name_b)}</p>"
-            f"<p>Pagine con differenze: <b>{len(changed)}</b> su {len(diffs)}.</p>")
+            label = T(kind)
+            rows.append(T("<tr style='background:{}'><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>").format(color, pg, label, html.escape(ta), html.escape(tb)))
+    head = (T('<h2>Confronto documenti</h2><p><b>A:</b> {}<br><b>B:</b> {}</p><p>Pagine con differenze: <b>{}</b> su {}.</p>').format(html.escape(name_a), html.escape(name_b), len(changed), len(diffs)))
     if not rows:
-        return head + "<p>Nessuna differenza nel testo.</p>"
-    return (head + "<table border='1' cellspacing='0' cellpadding='4' width='100%'>"
-            "<tr><th>Pag.</th><th>Tipo</th><th>Testo in A</th><th>Testo in B</th></tr>" + "".join(rows) + "</table>")
+        return head + T('<p>Nessuna differenza nel testo.</p>')
+    return (head + T("<table border='1' cellspacing='0' cellpadding='4' width='100%'><tr><th>Pag.</th><th>Tipo</th><th>Testo in A</th><th>Testo in B</th></tr>") + "".join(rows) + "</table>")

@@ -14,6 +14,7 @@ import hashlib
 import io
 import os
 from dataclasses import dataclass, field
+from ..i18n import T
 
 
 @dataclass
@@ -101,7 +102,7 @@ def _windows_roots():
     out = []
     try:
         import ssl
-        for store in ("ROOT", "CA"):
+        for store in (T('ROOT'), "CA"):
             for der, enc, trust in ssl.enum_certificates(store):
                 if enc == "x509_asn":
                     try:
@@ -134,7 +135,7 @@ def verify_pdf(data: bytes) -> list[SigInfo]:
     r = PdfFileReader(io.BytesIO(data), strict=False)
     sigs = list(r.embedded_signatures)
     for sig in sigs:
-        info = SigInfo(field=sig.field_name or "Firma")
+        info = SigInfo(field=sig.field_name or T('Firma'))
         try:
             sd = sig.sig_object
             info.reason = str(sd.get("/Reason", "") or "")
@@ -148,7 +149,7 @@ def verify_pdf(data: bytes) -> list[SigInfo]:
             info.cert_valid_to = _fmt_dt(cert["tbs_certificate"]["validity"]["not_after"].native)
             info.serial = f"{cert.serial_number:X}"
         except Exception as e:
-            info.errors.append(f"Certificato non leggibile: {e}")
+            info.errors.append(T('Certificato non leggibile: {}').format(e))
         try:
             st = validate_pdf_signature(sig, validation_context())
             info.intact = bool(st.intact)
@@ -163,11 +164,11 @@ def verify_pdf(data: bytes) -> list[SigInfo]:
                     info.covers_all = True
                 elif "FORM_FILLING" in ml or "LTA_UPDATES" in ml:
                     info.covers_all = True
-                    info.modified_after = "Dopo la firma sono stati compilati campi o aggiunte firme (consentito)"
+                    info.modified_after = T('Dopo la firma sono stati compilati campi o aggiunte firme (consentito)')
                 elif "ANNOTATIONS" in ml:
-                    info.modified_after = "Dopo la firma sono state aggiunte annotazioni"
+                    info.modified_after = T('Dopo la firma sono state aggiunte annotazioni')
                 else:
-                    info.modified_after = "Il documento è stato modificato dopo la firma"
+                    info.modified_after = T('Il documento è stato modificato dopo la firma')
             try:
                 info.details = st.pretty_print_details()
             except Exception:
@@ -181,16 +182,16 @@ def verify_pdf(data: bytes) -> list[SigInfo]:
 
 def _summary(i: SigInfo) -> str:
     if i.errors and not i.valid:
-        return "Impossibile verificare la firma: " + "; ".join(i.errors)
+        return T('Impossibile verificare la firma: ') + "; ".join(i.errors)
     if not i.intact:
-        return "Firma NON valida: il documento è stato alterato dopo la firma."
+        return T('Firma NON valida: il documento è stato alterato dopo la firma.')
     if not i.valid:
-        return "Firma NON valida: la firma crittografica non corrisponde."
-    parts = ["Integrità verificata: il contenuto firmato non è stato modificato."]
+        return T('Firma NON valida: la firma crittografica non corrisponde.')
+    parts = [T('Integrità verificata: il contenuto firmato non è stato modificato.')]
     if i.trusted:
-        parts.append("Il certificato del firmatario è attendibile.")
+        parts.append(T('Il certificato del firmatario è attendibile.'))
     else:
-        parts.append("Il certificato del firmatario non è tra quelli attendibili (identità non verificata).")
+        parts.append(T('Il certificato del firmatario non è tra quelli attendibili (identità non verificata).'))
     if i.modified_after:
         parts.append(i.modified_after + ".")
     return " ".join(parts)
@@ -245,7 +246,7 @@ def _verify_signer_info(si, certs, payload: bytes) -> SigInfo:
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
 
-    info = SigInfo(field="Firma CAdES")
+    info = SigInfo(field=T('Firma CAdES'))
     sid = si["sid"]
     cert = None
     for c in certs:
@@ -260,7 +261,7 @@ def _verify_signer_info(si, certs, payload: bytes) -> SigInfo:
     if cert is None and certs:
         cert = certs[0]
     if cert is None:
-        info.errors.append("Certificato del firmatario assente")
+        info.errors.append(T('Certificato del firmatario assente'))
         info.summary = _summary(info)
         return info
     info.signer, info.email, info.issuer = _name(cert)
@@ -298,7 +299,7 @@ def _verify_signer_info(si, certs, payload: bytes) -> SigInfo:
         info.valid = True
     except Exception as e:
         info.valid = False
-        info.errors.append(f"Verifica crittografica fallita ({type(e).__name__})")
+        info.errors.append(T('Verifica crittografica fallita ({})').format(type(e).__name__))
     info.trusted = _chain_trusted(cert, certs)
     info.covers_all = info.intact
     info.summary = _summary(info)
@@ -336,7 +337,7 @@ def load_signer(pfx_path: str, password: str):
     from pyhanko.sign import signers
     s = signers.SimpleSigner.load_pkcs12(pfx_path, passphrase=password.encode("utf-8") if password else None)
     if s is None:
-        raise ValueError("Impossibile aprire il certificato: password errata o file non valido")
+        raise ValueError(T('Impossibile aprire il certificato: password errata o file non valido'))
     return s
 
 
@@ -364,11 +365,11 @@ def sign_pdf(data: bytes, req: SignRequest, page_height: float, existing_field: 
         cn = _name(signer.signing_cert)[0]
         lines = []
         if req.show_text:
-            lines = [f"Firmato digitalmente da: {cn}", "Data: %(ts)s"]
+            lines = [T('Firmato digitalmente da: {}').format(cn), "Data: %(ts)s"]
             if req.reason:
-                lines.append(f"Motivo: {req.reason}")
+                lines.append(T('Motivo: {}').format(req.reason))
             if req.location:
-                lines.append(f"Luogo: {req.location}")
+                lines.append(T('Luogo: {}').format(req.location))
         bg = images.PdfImage(req.image_path) if req.image_path else None
         style = stamp.TextStampStyle(stamp_text="\n".join(lines) or " ", background=bg,
                                      background_opacity=0.9 if bg else 0.6,

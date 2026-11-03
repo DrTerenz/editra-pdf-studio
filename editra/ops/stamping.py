@@ -7,6 +7,7 @@ import os
 import pymupdf
 
 from .common import hex_to_rgb
+from ..i18n import T
 
 POSITIONS = ["alto-sinistra", "alto-centro", "alto-destra", "basso-sinistra", "basso-centro", "basso-destra"]
 
@@ -98,7 +99,7 @@ def _watermark_page(text: str, font: str, size: float, color: str, opacity: floa
     return d
 
 
-def watermark_text(doc: pymupdf.Document, pages: list[int], text: str, font: str = "Helvetica grassetto",
+def watermark_text(doc: pymupdf.Document, pages: list[int], text: str, font: str = T('Helvetica grassetto'),
                    size: float = 60, color: str = "#c62828", opacity: float = 0.25, rotation: float = 45,
                    overlay: bool = True, position: str = "centro", scale_to_page: float = 0) -> None:
     wm = _watermark_page(text, font, size, color, opacity)
@@ -111,7 +112,7 @@ def watermark_image(doc: pymupdf.Document, pages: list[int], path: str, opacity:
                     scale_to_page: float = 0.5) -> None:
     from PIL import Image
     import io
-    img = Image.open(path).convert("RGBA")
+    img = Image.open(path).convert(T('RGBA'))
     if opacity < 1:
         alpha = img.getchannel("A").point(lambda a: int(a * opacity))
         img.putalpha(alpha)
@@ -165,8 +166,8 @@ def background(doc: pymupdf.Document, pages: list[int], color: str | None = None
             shape.commit(overlay=False)
 
 
-def page_numbers(doc: pymupdf.Document, pages: list[int], template: str = "Pagina {n} di {N}",
-                 position: str = "basso-centro", font: str = "Helvetica", size: float = 10,
+def page_numbers(doc: pymupdf.Document, pages: list[int], template: str = T('Pagina {n} di {N}'),
+                 position: str = "basso-centro", font: str = T('Helvetica'), size: float = 10,
                  color: str = "#000000", start: int = 1, margin_x: float = 36, margin_y: float = 24) -> None:
     total = doc.page_count
     for k, pno in enumerate(pages):
