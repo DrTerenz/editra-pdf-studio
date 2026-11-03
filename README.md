@@ -111,7 +111,15 @@ Editra PDF Studio was designed and built by Giacomo Terenzi with the help of an 
 
 ## License
 
-[GNU AGPL-3.0-or-later](LICENSE). The PDF engine, MuPDF, is AGPL-licensed, so the whole program is too.
+Copyright (C) 2026 Giacomo Terenzi
+
+Editra PDF Studio is free software: you can redistribute it and/or modify it under the terms of the
+[GNU Affero General Public License](LICENSE) as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version. It is distributed in the hope that it
+will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.
+
+The PDF engine, MuPDF, is AGPL-licensed, so the whole program is too.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the components used.
 
 ---
