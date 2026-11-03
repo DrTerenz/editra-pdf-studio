@@ -90,7 +90,18 @@ def self_test(out_path: str, pdf: str | None) -> int:
             return SG.verify_pdf(signed)[0].status
         step(T('firma e verifica'), sign_run)
     from .mainwindow import MainWindow
-    step("finestra", lambda: MainWindow() and True)
+    win_holder = []
+    step("finestra", lambda: win_holder.append(MainWindow()) or True)
+    if pdf and win_holder:
+        def print_preview_run():
+            from . import printing
+            from .model import PdfModel
+            d = printing.PrintDialog(win_holder[0], PdfModel(pdf), 0)
+            d._refresh()
+            pm = d.preview.pixmap()
+            d.deleteLater()
+            return True if pm is not None and not pm.isNull() else "anteprima vuota"
+        step("anteprima di stampa", print_preview_run)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     return 0 if all(l.startswith("OK") for l in lines) else 1

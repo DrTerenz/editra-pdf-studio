@@ -2,7 +2,7 @@
 ; Compilazione: ISCC.exe build\installer.iss  (dopo aver creato dist\EditraPDFStudio con PyInstaller)
 
 #define AppName "Editra PDF Studio"
-#define AppVersion "1.1.0"
+#define AppVersion "1.2.0"
 #define AppExe "EditraPDFStudio.exe"
 #define ProgId "EditraPDFStudio.Documento"
 

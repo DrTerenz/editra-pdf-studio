@@ -66,6 +66,14 @@ def _qss(c: dict) -> str:
     QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QPlainTextEdit:focus, QTextEdit:focus {{
         border: 1px solid {c['accent']}; }}
     QComboBox::drop-down {{ border: none; width: 18px; }}
+    QAbstractSpinBox {{ padding-right: 20px; }}
+    QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {{ subcontrol-origin: border; width: 18px;
+        border: none; background: transparent; }}
+    QAbstractSpinBox::up-button {{ subcontrol-position: top right; }}
+    QAbstractSpinBox::down-button {{ subcontrol-position: bottom right; }}
+    QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {{ background: {c['hover']}; }}
+    QAbstractSpinBox::up-arrow {{ image: url({c['arrow_up']}); width: 9px; height: 9px; }}
+    QAbstractSpinBox::down-arrow {{ image: url({c['arrow_down']}); width: 9px; height: 9px; }}
     QPushButton {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 6px; padding: 6px 14px; }}
     QPushButton:hover {{ background: {c['hover']}; }}
     QPushButton:pressed {{ background: {c['pressed']}; }}
@@ -104,6 +112,31 @@ def _qss(c: dict) -> str:
     """
 
 
+def _arrow_files(color: str) -> tuple[str, str]:
+    """Frecce delle caselle numeriche, disegnate nel colore del tema (servono come file per il foglio di stile)."""
+    import os
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtGui import QPainter, QPixmap, QPolygonF
+    from .settings import app_data_dir
+    folder = app_data_dir("tema")
+    paths = []
+    for name, pts in (("su", [(1, 7), (5, 3), (9, 7)]), ("giu", [(1, 3), (5, 7), (9, 3)])):
+        path = os.path.join(folder, f"freccia_{name}_{color.lstrip('#')}.png")
+        if not os.path.exists(path):
+            pm = QPixmap(20, 20)
+            pm.fill(Qt.transparent)
+            p = QPainter(pm)
+            p.setRenderHint(QPainter.Antialiasing)
+            p.scale(2, 2)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(color))
+            p.drawPolygon(QPolygonF([QPointF(x, y) for x, y in pts]))
+            p.end()
+            pm.save(path, "PNG")
+        paths.append(path.replace("\\", "/"))
+    return paths[0], paths[1]
+
+
 def apply(app: QApplication, mode: str = "light") -> None:
     """mode: 'light', 'dark' oppure 'system'."""
     global current
@@ -133,5 +166,7 @@ def apply(app: QApplication, mode: str = "light") -> None:
     pal.setColor(QPalette.Disabled, QPalette.Text, QColor(c["muted"]))
     pal.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(c["muted"]))
     app.setPalette(pal)
+    c = dict(c)
+    c["arrow_up"], c["arrow_down"] = _arrow_files(c["icon"])
     app.setStyleSheet(_qss(c))
     icons.set_icon_color(c["icon"])

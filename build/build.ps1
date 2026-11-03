@@ -20,6 +20,8 @@ if (-not $SkipTests) {
         $env:EDITRA_LANG = $lang
         & $py tests\test_gui.py "$work\gui_$lang" "$work\prova.pdf" | Select-Object -Last 1
         if ($LASTEXITCODE -ne 0) { throw "Collaudo dell'interfaccia fallito ($lang)" }
+        & $py tests\test_print.py "$work\print_$lang" "$work\prova.pdf" | Select-Object -Last 1
+        if ($LASTEXITCODE -ne 0) { throw "Collaudo della stampa fallito ($lang)" }
     }
     Remove-Item Env:\QT_QPA_PLATFORM
     Remove-Item Env:\EDITRA_LANG

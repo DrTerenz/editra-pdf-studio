@@ -4,10 +4,10 @@ Lettore ed editor PDF gratuito e open source per Windows 10/11 (licenza AGPL-3.0
 
 ## Installazione
 
-- **Installer:** `installer\EditraPDFStudio_Setup_1.1.0.exe`. Non servono permessi di amministratore.
+- **Installer:** `installer\EditraPDFStudio_Setup_1.2.0.exe`. Non servono permessi di amministratore.
   Durante l'installazione puoi scegliere il collegamento sul desktop e l'apertura automatica dei file `.pdf` e `.p7m`.
   Su Windows 11 la prima volta che apri un PDF il sistema può chiedere con quale app aprirlo: scegli Editra PDF Studio.
-- **Versione portatile:** `installer\EditraPDFStudio_portable_1.1.0.zip`. La estrai dove vuoi (anche su una chiavetta)
+- **Versione portatile:** `installer\EditraPDFStudio_portable_1.2.0.zip`. La estrai dove vuoi (anche su una chiavetta)
   e avvii `EditraPDFStudio.exe`, senza installare nulla.
 
 Una volta installato il programma è indipendente da questa cartella. La cartella `PDF` serve solo per modificarlo
