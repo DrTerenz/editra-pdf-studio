@@ -1,0 +1,13 @@
+# ambiente e cache
+.venv/
+__pycache__/
+*.pyc
+
+# prodotti della compilazione (installer e zip vanno nelle Release di GitHub)
+dist/
+build/tmp/
+installer/
+
+# impostazioni locali degli strumenti
+.claude/
+*.log
